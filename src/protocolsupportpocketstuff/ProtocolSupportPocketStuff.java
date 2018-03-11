@@ -1,5 +1,6 @@
 package protocolsupportpocketstuff;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -68,6 +69,10 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 
 		// = Cache = \\
 		Skins.INSTANCE.buildCache(getConfig().getInt("skins.cache-size"), getConfig().getInt("skins.cache-rate"));
+
+		if (getConfig().getBoolean("hacks.teams")) {
+			Bukkit.getPluginManager().registerEvents(new TeamsPacketListener.UpdateExecutor(this), this);
+		}
 
 		pm("Hello world! :D");
 	}

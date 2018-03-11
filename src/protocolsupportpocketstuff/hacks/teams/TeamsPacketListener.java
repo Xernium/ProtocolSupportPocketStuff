@@ -2,7 +2,13 @@ package protocolsupportpocketstuff.hacks.teams;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.server.v1_12_R1.PacketPlayOutScoreboardTeam;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import protocolsupport.api.Connection;
+import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
@@ -22,16 +28,41 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TeamsPacketListener extends Connection.PacketListener {
 	private Connection con;
-	private ConcurrentHashMap<String, Integer> cachedUsers = new ConcurrentHashMap<String, Integer>();
-	private ConcurrentHashMap<String, CachedTeam> cachedTeams = new ConcurrentHashMap<String, CachedTeam>();
+	private ConcurrentHashMap<String, Integer> cachedUsers = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, CachedTeam> cachedTeams = new ConcurrentHashMap<>();
 	private static Field TEAM_NAME = null;
 	private static Field UPDATE_MODE = null;
 	private static Field TEAM_PREFIX = null;
 	private static Field TEAM_SUFFIX = null;
 	private static Field TEAM_ENTITIES = null;
 
+	private static final String META_KEY = "__PSPS_TEAMSPACKETLISTENER";
+
 	public TeamsPacketListener(ProtocolSupportPocketStuff plugin, Connection con) {
 		this.con = con;
+		con.addMetadata(META_KEY, this);
+	}
+
+	public static TeamsPacketListener get(Player p) {
+		return (TeamsPacketListener) ProtocolSupportAPI.getConnection(p).getMetadata(META_KEY);
+	}
+
+	public static class UpdateExecutor implements Listener {
+
+		private final ProtocolSupportPocketStuff plugin;
+
+		public UpdateExecutor(ProtocolSupportPocketStuff plugin) {
+			this.plugin = plugin;
+		}
+
+		@EventHandler
+		public void handle(PlayerJoinEvent event) {
+			TeamsPacketListener listener = TeamsPacketListener.get(event.getPlayer());
+			if (listener == null) {
+				return;
+			}
+			Bukkit.getScheduler().runTaskLater(plugin, listener::updateAll, 20);
+		}
 	}
 
 	static {
@@ -50,6 +81,10 @@ public class TeamsPacketListener extends Connection.PacketListener {
 		} catch (NoSuchFieldException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void updateAll() {
+		cachedTeams.values().forEach(cachedTeam -> cachedTeam.updatePlayers(this));
 	}
 
 	@SuppressWarnings({ "unchecked", "unlikely-arg-type" })
