@@ -47,7 +47,6 @@ public class BlockPickRequestPacket extends PEPacket {
 		@Override
 		public void handle() {
 			BlockPickRequestPacket parent = BlockPickRequestPacket.this;
-			System.out.println("BlockPICK!: " + parent.position + " slot: " + parent.slot);
 			PickRequester.getInstance().handleBlockPick(connection.getPlayer(), position);
 		}
 		

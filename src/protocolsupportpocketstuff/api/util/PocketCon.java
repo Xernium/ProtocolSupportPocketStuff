@@ -113,7 +113,6 @@ public class PocketCon {
 	}
 
 	public static ModalType detectModalType(String modalJSON) {
-		System.out.println(modalJSON);
 		JsonObject jsonParser = StuffUtils.JSON_PARSER.parse(modalJSON).getAsJsonObject();
 		String pocketType = jsonParser.get("type").getAsString();
 		return ModalType.getByPeName(pocketType);

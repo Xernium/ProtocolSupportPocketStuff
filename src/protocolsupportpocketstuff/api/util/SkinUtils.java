@@ -8,7 +8,6 @@ import java.io.ByteArrayInputStream;
 
 public class SkinUtils {
 	public static BufferedImage fromData(byte[] data) {
-		System.out.println(data.length);
 		Validate.isTrue((data.length == 8192) || (data.length == 16384), "Skin data must be either 8192 or 16384 bytes long!");
 		int width = 64, height = (data.length == 16384) ? 64 : 32;
 		ByteArrayInputStream stream = new ByteArrayInputStream(data);

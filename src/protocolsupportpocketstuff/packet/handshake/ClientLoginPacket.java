@@ -3,6 +3,7 @@ package protocolsupportpocketstuff.packet.handshake;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
+import org.json.simple.JSONValue;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolType;
 import protocolsupport.libs.com.google.gson.JsonObject;
@@ -21,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class ClientLoginPacket extends PEPacket {
@@ -95,16 +97,19 @@ public class ClientLoginPacket extends PEPacket {
 			ClientLoginPacket clientLoginPacket = ClientLoginPacket.this;
 			JsonObject clientPayload = clientLoginPacket.clientPayload;
 
-			HashMap<String, Object> clientInfo = new HashMap<>();
-			// "In general you shouldn't really expect the payload to be sent with psbpe" -Shevchik
-			if (clientPayload != null) {
-				clientInfo.put("ClientRandomId", clientPayload.get("ClientRandomId").getAsLong());
-				clientInfo.put("DeviceModel", clientPayload.get("DeviceModel").getAsString());
-				clientInfo.put("DeviceOS", clientPayload.get("DeviceOS").getAsInt());
-				clientInfo.put("GameVersion", clientPayload.get("GameVersion").getAsString());
+			if (clientPayload == null) {
+				return;
 			}
 
+			HashMap<String, Object> clientInfo = new HashMap<>();
+			// "In general you shouldn't really expect the payload to be sent with psbpe" -Shevchik
+				clientInfo.putAll((Map<? extends String, ?>) JSONValue.parse(clientPayload.toString()));
+
 			connection.addMetadata(StuffUtils.CLIENT_INFO_KEY, clientInfo);
+
+			if (!clientPayload.has("SkinData")) {
+				return;
+			}
 
 			String skinData = clientPayload.get("SkinData").getAsString();
 			String uniqueSkinId = UUID.nameUUIDFromBytes(skinData.getBytes()).toString();
