@@ -57,6 +57,8 @@ public class TeamsPacketListener extends Connection.PacketListener {
 
 		@EventHandler
 		public void handle(PlayerJoinEvent event) {
+			// To compatible with bungeecord server switch.
+			// Respawn f5 players metadata so we resend it.
 			TeamsPacketListener listener = TeamsPacketListener.get(event.getPlayer());
 			if (listener == null) {
 				return;

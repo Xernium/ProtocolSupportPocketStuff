@@ -3,10 +3,9 @@ package protocolsupportpocketstuff.packet.handshake;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
-import org.json.simple.JSONValue;
+import org.json.simple.JSONObject;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolType;
-import protocolsupport.libs.com.google.gson.JsonObject;
 import protocolsupport.protocol.serializer.ArraySerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
@@ -22,12 +21,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class ClientLoginPacket extends PEPacket {
 	int protocolVersion;
-	JsonObject clientPayload;
+	JSONObject clientPayload;
 
 	public ClientLoginPacket() { }
 
@@ -66,12 +64,12 @@ public class ClientLoginPacket extends PEPacket {
 		}
 	}
 
-	private JsonObject decodeToken(String token) {
+	private JSONObject decodeToken(String token) {
 		String[] base = token.split("\\.");
 		if (base.length < 2) {
 			return null;
 		}
-		return StuffUtils.GSON.fromJson(new InputStreamReader(new ByteArrayInputStream(Base64.getDecoder().decode(base[1]))), JsonObject.class);
+		return StuffUtils.GSON.fromJson(new InputStreamReader(new ByteArrayInputStream(Base64.getDecoder().decode(base[1]))), JSONObject.class);
 	}
 
 	public class decodeHandler extends PEPacket.decodeHandler {
@@ -95,7 +93,7 @@ public class ClientLoginPacket extends PEPacket {
 		@Override
 		public void handle() {
 			ClientLoginPacket clientLoginPacket = ClientLoginPacket.this;
-			JsonObject clientPayload = clientLoginPacket.clientPayload;
+			JSONObject clientPayload = clientLoginPacket.clientPayload;
 
 			if (clientPayload == null) {
 				return;
@@ -103,15 +101,15 @@ public class ClientLoginPacket extends PEPacket {
 
 			HashMap<String, Object> clientInfo = new HashMap<>();
 			// "In general you shouldn't really expect the payload to be sent with psbpe" -Shevchik
-				clientInfo.putAll((Map<? extends String, ?>) JSONValue.parse(clientPayload.toString()));
+				clientInfo.putAll(clientPayload);
 
 			connection.addMetadata(StuffUtils.CLIENT_INFO_KEY, clientInfo);
 
-			if (!clientPayload.has("SkinData")) {
+			if (!clientPayload.containsKey("SkinData")) {
 				return;
 			}
 
-			String skinData = clientPayload.get("SkinData").getAsString();
+			String skinData = String.valueOf(clientPayload.get("SkinData"));
 			String uniqueSkinId = UUID.nameUUIDFromBytes(skinData.getBytes()).toString();
 
 			if (Skins.INSTANCE.hasPcSkin(uniqueSkinId)) {
@@ -121,7 +119,7 @@ public class ClientLoginPacket extends PEPacket {
 			}
 			byte[] skinByteArray = Base64.getDecoder().decode(skinData);
 
-			MineskinThread mineskinThread = new MineskinThread(plugin, connection, uniqueSkinId, skinByteArray, clientLoginPacket.clientPayload.get("SkinGeometryName").getAsString().equals("geometry.humanoid.customSlim"));
+			MineskinThread mineskinThread = new MineskinThread(plugin, connection, uniqueSkinId, skinByteArray, String.valueOf(clientPayload.get("SkinGeometryName")).equals("geometry.humanoid.customSlim"));
 			mineskinThread.start();
 		}
 	}

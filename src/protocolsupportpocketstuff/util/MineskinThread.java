@@ -22,8 +22,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class MineskinThread extends Thread {
+public class MineskinThread implements Runnable {
 	ProtocolSupportPocketStuff plugin;
 	Connection connection;
 	String uniqueSkinId;
@@ -48,7 +50,6 @@ public class MineskinThread extends Thread {
 
 	@Override
 	public void run() {
-		super.run();
 		plugin.debug("Sending skin " + uniqueSkinId + " to MineSkin...");
 
 		try {
@@ -101,6 +102,15 @@ public class MineskinThread extends Thread {
 				.userAgent("ProtocolSupportPocketStuff");
 		httpRequest.part("file", "mcpe_skin.png", null, inputStream);
 		return StuffUtils.JSON_PARSER.parse(httpRequest.body()).getAsJsonObject();
+	}
+
+	enum Runner {
+		INSTANCE;
+		final ExecutorService service = Executors.newSingleThreadExecutor();
+	}
+
+	public void start() {
+		Runner.INSTANCE.service.execute(this);
 	}
 
 	public void hackyStuff(Connection connection, String value, String signature) {
