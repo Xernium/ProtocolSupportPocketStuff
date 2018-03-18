@@ -121,7 +121,7 @@ public class TeamsPacketListener extends Connection.PacketListener {
 			if (cachedTeams.containsKey(teamName)) {
 				CachedTeam team = cachedTeams.get(teamName);
 				team.removePlayers(team.players, this);
-				cachedTeams.remove(team);
+				cachedTeams.remove(teamName);
 			}
 		}
 		if (mode == 2) { // update
