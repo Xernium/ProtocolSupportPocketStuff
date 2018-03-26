@@ -1,5 +1,7 @@
 package protocolsupportpocketstuff.hacks.teams;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.server.v1_12_R1.PacketPlayOutScoreboardTeam;
 import org.bukkit.Bukkit;
@@ -29,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TeamsPacketListener extends Connection.PacketListener {
 	private Connection con;
 	private ConcurrentHashMap<String, Integer> cachedUsers = new ConcurrentHashMap<>();
-	private ConcurrentHashMap<String, CachedTeam> cachedTeams = new ConcurrentHashMap<>();
+	private Cache<String, CachedTeam> cachedTeams = CacheBuilder.newBuilder().softValues().build();
 	private static Field TEAM_NAME = null;
 	private static Field UPDATE_MODE = null;
 	private static Field TEAM_PREFIX = null;
@@ -86,7 +88,7 @@ public class TeamsPacketListener extends Connection.PacketListener {
 	}
 
 	public void updateAll() {
-		cachedTeams.values().forEach(cachedTeam -> cachedTeam.updatePlayers(this));
+		cachedTeams.asMap().values().forEach(cachedTeam -> cachedTeam.updatePlayers(this));
 	}
 
 	@SuppressWarnings({ "unchecked", "unlikely-arg-type" })
@@ -118,15 +120,15 @@ public class TeamsPacketListener extends Connection.PacketListener {
 			return;
 		}
 		if (mode == 1) { // delete
-			if (cachedTeams.containsKey(teamName)) {
-				CachedTeam team = cachedTeams.get(teamName);
+			if (cachedTeams.asMap().containsKey(teamName)) {
+				CachedTeam team = cachedTeams.asMap().get(teamName);
 				team.removePlayers(team.players, this);
-				cachedTeams.remove(teamName);
+				cachedTeams.asMap().remove(teamName);
 			}
 		}
 		if (mode == 2) { // update
-			if (cachedTeams.containsKey(teamName)) {
-				CachedTeam team = cachedTeams.get(teamName);
+			if (cachedTeams.asMap().containsKey(teamName)) {
+				CachedTeam team = cachedTeams.asMap().get(teamName);
 				String prefix = (String) get(TEAM_PREFIX, packet);
 				String suffix = (String) get(TEAM_SUFFIX, packet);
 				team.setPrefix(prefix);
@@ -135,9 +137,9 @@ public class TeamsPacketListener extends Connection.PacketListener {
 			}
 		}
 		if (mode == 3) { // add players
-			if (cachedTeams.containsKey(teamName)) {
+			if (cachedTeams.asMap().containsKey(teamName)) {
 				Collection<String> entities = (Collection<String>) get(TEAM_ENTITIES, packet);
-				CachedTeam team = cachedTeams.get(teamName);
+				CachedTeam team = cachedTeams.asMap().get(teamName);
 
 				for (String entity : entities) {
 					team.getPlayers().add(entity);
@@ -146,9 +148,9 @@ public class TeamsPacketListener extends Connection.PacketListener {
 			}
 		}
 		if (mode == 4) { // remove players
-			if (cachedTeams.containsKey(teamName)) {
+			if (cachedTeams.asMap().containsKey(teamName)) {
 				Collection<String> entities = (Collection<String>) get(TEAM_ENTITIES, packet);
-				CachedTeam team = cachedTeams.get(teamName);
+				CachedTeam team = cachedTeams.asMap().get(teamName);
 				team.removePlayers(entities, this);
 			}
 		}
