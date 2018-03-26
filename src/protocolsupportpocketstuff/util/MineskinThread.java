@@ -7,9 +7,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.json.simple.JSONValue;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ServerPlatformIdentifier;
-import protocolsupport.libs.com.google.gson.JsonObject;
 import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
 import protocolsupportpocketstuff.api.util.SkinUtils;
 import protocolsupportpocketstuff.libs.kevinsawicki.http.HttpRequest;
@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -56,12 +57,12 @@ public class MineskinThread implements Runnable {
 			int tries = 0;
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
 			ImageIO.write(skin, "png", os);
-			JsonObject mineskinResponse = sendToMineSkin(os, isSlim);
+			Map<String, ?> mineskinResponse = sendToMineSkin(os, isSlim);
 
 			plugin.debug("[#" + (tries + 1) + "] " + mineskinResponse);
 
-			while (mineskinResponse.has("error")) {
-				String error = mineskinResponse.get("error").getAsString();
+			while (mineskinResponse.containsKey("error")) {
+				String error = String.valueOf(mineskinResponse.get("error"));
 				if (!connection.isConnected()) {
 					plugin.debug("[#" + (tries + 1) + "] Failed again... but the client disconnected, so we are going to ignore the skin!");
 					return;
@@ -77,10 +78,10 @@ public class MineskinThread implements Runnable {
 				tries++;
 			}
 
-			JsonObject skinData = mineskinResponse.get("data").getAsJsonObject();
-			JsonObject skinTexture = skinData.get("texture").getAsJsonObject();
-			String signature = skinTexture.get("signature").getAsString();
-			String value = skinTexture.get("value").getAsString();
+			Map<String, ?> skinData = (Map<String, ?>) mineskinResponse.get("data");
+			Map<String, ?> skinTexture = (Map<String, ?>) skinData.get("texture");
+			String signature = String.valueOf(skinTexture.get("signature"));
+			String value = String.valueOf(skinTexture.get("value"));
 
 			plugin.debug("Storing skin on cache...");
 			Skins.INSTANCE.cachePcSkin(uniqueSkinId, new SkinUtils.SkinDataWrapper(value, signature, isSlim));
@@ -90,18 +91,18 @@ public class MineskinThread implements Runnable {
 		}
 	}
 
-	public static JsonObject sendToMineSkin(ByteArrayOutputStream byteArrayOutputStream, boolean isSlim) throws IOException {
+	public static Map<String, ?> sendToMineSkin(ByteArrayOutputStream byteArrayOutputStream, boolean isSlim) throws IOException {
 		InputStream inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-		JsonObject mineskinResponse = sendToMineSkin(inputStream, isSlim);
+		Map<String, ?> mineskinResponse = sendToMineSkin(inputStream, isSlim);
 		inputStream.close();
 		return mineskinResponse;
 	}
 
-	public static JsonObject sendToMineSkin(InputStream inputStream, boolean isSlim) {
+	public static Map<String, ?> sendToMineSkin(InputStream inputStream, boolean isSlim) {
 		HttpRequest httpRequest = HttpRequest.post("http://api.mineskin.org/generate/upload?name=&model=" + (isSlim ? "slim" : "steve") + "&visibility=1")
 				.userAgent("ProtocolSupportPocketStuff");
 		httpRequest.part("file", "mcpe_skin.png", null, inputStream);
-		return StuffUtils.JSON_PARSER.parse(httpRequest.body()).getAsJsonObject();
+		return (Map<String, ?>) JSONValue.parse(httpRequest.body());
 	}
 
 	enum Runner {
