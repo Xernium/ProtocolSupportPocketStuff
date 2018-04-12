@@ -49,7 +49,7 @@ pocketpacks:
  force-resources: false
  behavior-packs: []
  resource-packs: []
-hacks: 
+hacks:
  dimensions: true
  middleclick: true
  holograms: true

@@ -7,10 +7,12 @@ import net.minecraft.server.v1_12_R1.PacketPlayOutScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
+import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
@@ -57,15 +59,16 @@ public class TeamsPacketListener extends Connection.PacketListener {
 			this.plugin = plugin;
 		}
 
-		@EventHandler
+		@EventHandler(priority = EventPriority.LOW)
 		public void handle(PlayerJoinEvent event) {
-			// To compatible with bungeecord server switch.
-			// Respawn f5 players metadata so we resend it.
-			TeamsPacketListener listener = TeamsPacketListener.get(event.getPlayer());
-			if (listener == null) {
+			Connection conn = ProtocolSupportAPI.getConnection(event.getPlayer());
+			if (!(conn.getVersion() == ProtocolVersion.MINECRAFT_PE)) {
 				return;
 			}
-			Bukkit.getScheduler().runTaskLater(plugin, listener::updateAll, 20);
+			if (conn.getMetadata("_PE_TRANSFER_") == null) {
+				return;
+			}
+			Bukkit.getScheduler().runTaskLater(plugin, () -> get(event.getPlayer()).updateAll(), 20);
 		}
 	}
 

@@ -74,6 +74,10 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 			Bukkit.getPluginManager().registerEvents(new TeamsPacketListener.UpdateExecutor(this), this);
 		}
 
+		if (getConfig().getBoolean("hacks.itemframes")) {
+			Bukkit.getPluginManager().registerEvents(new ItemFramesPacketListener.UpdateExecutor(this), this);
+		}
+
 		pm("Hello world! :D");
 	}
 
