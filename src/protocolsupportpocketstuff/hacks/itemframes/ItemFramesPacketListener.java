@@ -14,7 +14,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
-import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.serializer.ItemStackSerializer;
 import protocolsupport.protocol.serializer.PositionSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
@@ -40,11 +39,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class ItemFramesPacketListener extends Connection.PacketListener {
-	private final ProtocolSupportPocketStuff plugin;
 	private Connection con;
-	private HashMap<Integer, CachedItemFrame> cachedItemFrames = new HashMap<>();
+	private WeakHashMap<Integer, CachedItemFrame> cachedItemFrames = new WeakHashMap<>();
 	private boolean isSpawned = false;
 
 	// Reflection stuff
@@ -125,21 +124,20 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		@EventHandler(priority = EventPriority.LOW)
 		public void handle(PlayerJoinEvent event) {
 			Connection conn = ProtocolSupportAPI.getConnection(event.getPlayer());
-			if (!(conn.getVersion() == ProtocolVersion.MINECRAFT_PE)) {
-				return;
-			}
 			if (conn.getMetadata("_PE_TRANSFER_") == null) {
 				return;
 			}
 			Bukkit.getScheduler().runTaskLater(plugin, () -> {
 				ItemFramesPacketListener listener = (ItemFramesPacketListener) conn.getMetadata(META_KEY);
-				listener.updateAll();
-			}, 20);
+				if (listener == null) {
+					return;
+				}
+				listener.cachedItemFrames.values().forEach(i -> i.spawn(listener));
+			}, 100);
 		}
 	}
 
 	public ItemFramesPacketListener(ProtocolSupportPocketStuff plugin, Connection con) {
-		this.plugin = plugin;
 		this.con = con;
 		con.addMetadata(META_KEY, this);
 	}
@@ -216,10 +214,6 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 			}
 			return;
 		}
-	}
-
-	public void updateAll() {
-		cachedItemFrames.values().forEach(itemFrame -> itemFrame.updateMetadata(this));
 	}
 
 	@Override
@@ -332,11 +326,11 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		data.readByte();
 		data.readByte();
 
-		if (packetId == PEPacketIDs.CHANGE_DIMENSION) {
-			// Clear cached item frames on dimension switch
-			cachedItemFrames.clear();
-			return;
-		}
+//		if (packetId == PEPacketIDs.CHANGE_DIMENSION) {
+//			// Clear cached item frames on dimension switch
+//			cachedItemFrames.clear();
+//			return;
+//		}
 		if (packetId == PEPacketIDs.UPDATE_BLOCK) {
 			Position position = new Position(0, 0, 0); 
 			PositionSerializer.readPEPositionTo(data, position);
@@ -394,7 +388,6 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		private int z;
 		private int facing;
 		private NBTTagCompoundWrapper spawnTag;
-		private List<DataWatcher.Item<?>> dataWatchers;
 
 		public CachedItemFrame(int x, int y, int z, int facing) {
 			this.x = x;
@@ -458,13 +451,6 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 			PocketCon.sendPocketPacket(listener.con, updateBlockPacket);
 		}
 
-		public void updateMetadata(ItemFramesPacketListener listener) {
-			if (dataWatchers == null) {
-				return;
-			}
-			updateMetadata(listener, dataWatchers);
-		}
-
 		public void updateMetadata(ItemFramesPacketListener listener, List<DataWatcher.Item<?>> dataWatchers) {
 			NBTTagCompoundWrapper tag = getSpawnTag();
 
@@ -521,7 +507,6 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 						break;
 				}
 			}
-			this.dataWatchers = dataWatchers;
 			TileDataUpdatePacket tileDataUpdate = new TileDataUpdatePacket(getX(), getY(), getZ(), tag);
 			PocketCon.sendPocketPacket(listener.con, tileDataUpdate);
 		}
