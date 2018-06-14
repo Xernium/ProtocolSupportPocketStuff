@@ -2,8 +2,7 @@ package protocolsupportpocketstuff.hacks.holograms;
 
 import io.netty.buffer.ByteBuf;
 import protocolsupport.api.Connection;
-import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.Position;
-import protocolsupport.protocol.serializer.MiscSerializer;
+import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.SetPosition;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
@@ -103,7 +102,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
 			int headYaw = data.readByte();
 			int yaw = data.readByte();
 			boolean onGround = data.readBoolean();
-			event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, Position.ANIMATION_MODE_ALL, onGround).encode(con));
+			event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
 			return;
 		}
 		if (packetId == PEPacketIDs.SPAWN_ENTITY) {

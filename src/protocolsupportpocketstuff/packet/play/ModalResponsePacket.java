@@ -78,7 +78,7 @@ public class ModalResponsePacket extends PEPacket {
 						pm.callEvent(event);
 						return;
 					} else if (modalType == ModalType.MODAL_WINDOW) {
-						ModalWindowResponseEvent event = new ModalWindowResponseEvent(_connection, parent.getModalId(), parent.getModalJSON(), modalType, isClosedByClient ? false : element.getAsBoolean());
+						ModalWindowResponseEvent event = new ModalWindowResponseEvent(_connection, parent.getModalId(), parent.getModalJSON(), modalType, !isClosedByClient && element.getAsBoolean());
 						event.setCancelled(isClosedByClient);
 						pm.callEvent(event);
 						return;

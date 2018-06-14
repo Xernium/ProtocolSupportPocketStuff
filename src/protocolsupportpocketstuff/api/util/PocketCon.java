@@ -149,7 +149,7 @@ public class PocketCon {
 			complexFormCallback.onComplexFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), jsonArray);
 		} else if (modalCallback instanceof ModalWindowCallback) {
 			ModalWindowCallback modalWindowResponseEvent = (ModalWindowCallback) modalCallback;
-			boolean result = event instanceof ModalWindowResponseEvent ? ((ModalWindowResponseEvent) event).getResult() : false;
+			boolean result = event instanceof ModalWindowResponseEvent && ((ModalWindowResponseEvent) event).getResult();
 			modalWindowResponseEvent.onModalWindowResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), result);
 		}
 	}
