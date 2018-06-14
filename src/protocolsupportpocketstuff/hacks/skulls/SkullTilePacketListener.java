@@ -1,9 +1,12 @@
 package protocolsupportpocketstuff.hacks.skulls;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.apache.commons.lang3.Validate;
 import protocolsupport.api.Connection;
 import protocolsupport.libs.com.google.gson.JsonObject;
+import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
+import protocolsupport.protocol.serializer.ArraySerializer;
 import protocolsupport.protocol.serializer.ItemStackSerializer;
 import protocolsupport.protocol.serializer.PositionSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
@@ -16,6 +19,7 @@ import protocolsupport.protocol.utils.types.Position;
 import protocolsupport.utils.CollectionsUtils;
 import protocolsupport.zplatform.itemstack.NBTTagCompoundWrapper;
 import protocolsupport.zplatform.itemstack.NBTTagType;
+import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
 import protocolsupportpocketstuff.api.util.PocketCon;
 import protocolsupportpocketstuff.packet.play.EntityDestroyPacket;
 import protocolsupportpocketstuff.packet.play.SkinPacket;
@@ -36,39 +40,44 @@ import java.util.SplittableRandom;
 import java.util.UUID;
 
 public class SkullTilePacketListener extends Connection.PacketListener {
-	private Connection con;
-	private boolean isSpawned = false;
+
+	private static final String META_KEY = "__SKULL_TILE_PACKET_LISTENER";
+	private final Connection con;
+	private final ProtocolSupportPocketStuff plugin;
 	private final HashMap<Long, CachedSkullBlock> cachedSkullBlocks = new HashMap<>();
 	private static final String SKULL_MODEL = StuffUtils.getResourceAsString("models/fake_skull_block.json");
 
 	// Constants
-	private static final int SKULL_BLOCK_ID = 144;
+	private static final int SKULL_RUNTIME_ID_0 = 1096;
+	private static final int SKULL_RUNTIME_ID_1 = SKULL_RUNTIME_ID_0 + 1;
+	private static final int SKULL_RUNTIME_ID_2 = SKULL_RUNTIME_ID_1 + 1;
+	private static final int SKULL_RUNTIME_ID_3 = SKULL_RUNTIME_ID_2 + 1;
+	private static final int SKULL_RUNTIME_ID_4 = SKULL_RUNTIME_ID_3 + 1;
+	private static final int SKULL_RUNTIME_ID_5 = SKULL_RUNTIME_ID_4 + 1;
+	private static final int SKULL_RUNTIME_ID_6 = SKULL_RUNTIME_ID_5 + 1;
+	private static final int SKULL_RUNTIME_ID_7 = SKULL_RUNTIME_ID_6 + 1;
+	private static final int SKULL_RUNTIME_ID_8 = SKULL_RUNTIME_ID_7 + 1;
+	private static final int SKULL_RUNTIME_ID_9 = SKULL_RUNTIME_ID_8 + 1;
+	private static final int SKULL_RUNTIME_ID_10 = SKULL_RUNTIME_ID_9 + 1;
+	private static final int SKULL_RUNTIME_ID_11 = SKULL_RUNTIME_ID_10 + 1;
+	private static final int SKULL_RUNTIME_ID_12 = SKULL_RUNTIME_ID_11 + 1;
+	private static final int SKULL_RUNTIME_ID_13 = SKULL_RUNTIME_ID_12 + 1;
+	private static final int SKULL_RUNTIME_ID_14 = SKULL_RUNTIME_ID_13 + 1;
+	private static final int SKULL_RUNTIME_ID_15 = SKULL_RUNTIME_ID_14 + 1;
 
-	public SkullTilePacketListener(Connection con) {
+	public SkullTilePacketListener(ProtocolSupportPocketStuff plugin, Connection con) {
+		this.plugin = plugin;
 		this.con = con;
+		con.addMetadata(META_KEY, this);
 	}
 
-	@Override
-	public void onRawPacketReceiving(RawPacketEvent event) {
-		ByteBuf data = event.getData();
-		int packetId = VarNumberSerializer.readVarInt(data);
+	public static SkullTilePacketListener get(Connection con) {
+		return (SkullTilePacketListener) con.getMetadata(META_KEY);
+	}
 
-		data.readByte();
-		data.readByte();
 
-		if (packetId == PEPacketIDs.PLAYER_MOVE) {
-			if (isSpawned)
-				return;
-
-			isSpawned = true;
-
-			for (CachedSkullBlock cachedSkullBlock : cachedSkullBlocks.values()) {
-				if (cachedSkullBlock.isCustomSkull()) {
-					cachedSkullBlock.spawn(this);
-				}
-			}
-			return;
-		}
+	public void clean() {
+		cachedSkullBlocks.clear();
 	}
 
 	@Override
@@ -79,10 +88,6 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 		data.readByte();
 		data.readByte();
 
-		if (packetId == PEPacketIDs.CHANGE_DIMENSION) {
-			cachedSkullBlocks.clear();
-			return;
-		}
 		if (packetId == PEPacketIDs.TILE_DATA_UPDATE) {
 			Position position = new Position(0, 0, 0);
 			PositionSerializer.readPEPositionTo(data, position);
@@ -105,11 +110,11 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 			Position position = new Position(0, 0, 0);
 			PositionSerializer.readPEPositionTo(data, position);
 			int id = VarNumberSerializer.readVarInt(data);
-			int flagsAndDataValue = VarNumberSerializer.readVarInt(data);
+			/*int flagsAndDataValue = */VarNumberSerializer.readVarInt(data);
 
 			long asLong = StuffUtils.convertPositionToLong(position);
 
-			int flags = 0;
+			/*int flags = 0;
 
 			if ((flagsAndDataValue & 0x01) != 0) {
 				flags += 0x01;
@@ -122,11 +127,26 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 			}
 			if ((flagsAndDataValue & 0x08) != 0) {
 				flags += 0x08;
-			}
+			}*/
 
-			int dataValue = flags & flagsAndDataValue;
+			int dataValue = id - SKULL_RUNTIME_ID_0;
 
-			if (id == SKULL_BLOCK_ID) {
+			if (id == SKULL_RUNTIME_ID_0 ||
+					id == SKULL_RUNTIME_ID_1 ||
+					id == SKULL_RUNTIME_ID_2 ||
+					id == SKULL_RUNTIME_ID_3 ||
+					id == SKULL_RUNTIME_ID_4 ||
+					id == SKULL_RUNTIME_ID_5 ||
+					id == SKULL_RUNTIME_ID_6 ||
+					id == SKULL_RUNTIME_ID_7 ||
+					id == SKULL_RUNTIME_ID_8 ||
+					id == SKULL_RUNTIME_ID_9 ||
+					id == SKULL_RUNTIME_ID_10 ||
+					id == SKULL_RUNTIME_ID_11 ||
+					id == SKULL_RUNTIME_ID_12 ||
+					id == SKULL_RUNTIME_ID_13 ||
+					id == SKULL_RUNTIME_ID_14 ||
+					id == SKULL_RUNTIME_ID_15) {
 				if (!cachedSkullBlocks.containsKey(asLong)) {
 					CachedSkullBlock cachedSkullBlock = new CachedSkullBlock(position);
 					cachedSkullBlock.dataValue = dataValue; // Store the new dataValue from this block
@@ -152,54 +172,85 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 		if (packetId == PEPacketIDs.CHUNK_DATA) {
 			int chunkX = VarNumberSerializer.readSVarInt(data); // chunk X
 			int chunkZ = VarNumberSerializer.readSVarInt(data); // chunk Z
-			VarNumberSerializer.readVarInt(data); // length
-			int sectionLength = data.readByte();
+			byte[] byteArray = ArraySerializer.readByteArray(data, con.getVersion());
+
+			ByteBuf chunkdata = Unpooled.wrappedBuffer(byteArray);
+			int sections = chunkdata.readByte(); // how many sections we have in this chunk
 
 			int chunkXStart = chunkX << 4;
 			int chunkZStart = chunkZ << 4;
 
 			HashMap<Long, Integer> skulls = new HashMap<>();
 
-			for (int idx = 0; sectionLength > idx; idx++) {
-				data.readByte(); // storage type
-				for (int x = 0; x < 16; x++) {
-					for (int z = 0; z < 16; z++) {
-						for (int y = 0; y < 16; y++) {
-							int id = data.readUnsignedByte();
+			for (int i = 0; i < sections; i++) {
+				chunkdata.readByte(); // subchunk version
 
-							if (id == SKULL_BLOCK_ID) {
-								skulls.put(StuffUtils.convertCoordinatesToLong(chunkXStart + x, (idx * 16) + y, chunkZStart + z), -1);
-							}
+				// Borrowed from https://gist.github.com/Tomcc/a96af509e275b1af483b25c543cfbf37 ~ thanks 7kasper!
+				int paletteAndFlag = chunkdata.readByte();
+				boolean isRuntime = (paletteAndFlag & 1) != 0;
+				int bitsPerBlock = paletteAndFlag >> 1;
+				int blocksPerWord = (int) Math.floor(32 / bitsPerBlock);
+				int wordCount = (int) Math.ceil(4096.0 / blocksPerWord);
+				int blockIndex = chunkdata.readerIndex();
+				chunkdata.skipBytes(wordCount * 4); //4 bytes per word.
+
+				HashMap<Integer, Integer> palette = new HashMap<Integer, Integer>();
+
+				if (isRuntime) {
+					int palleteSize = VarNumberSerializer.readSVarInt(chunkdata);
+					for (int palletId = 0; palletId < palleteSize; palletId++) {
+						int runtimeId = VarNumberSerializer.readSVarInt(chunkdata);
+						palette.put(palletId, runtimeId);
+					}
+				} else {
+					throw new RuntimeException("Trying to read non-runtime chunk data on runtime!");
+				}
+
+				int afterPaletteIndex = chunkdata.readerIndex();
+				chunkdata.readerIndex(blockIndex);
+				int position = 0;
+				for (int wordi = 0; wordi < wordCount; wordi++) {
+					int word = chunkdata.readIntLE();
+					for (int block = 0; block < blocksPerWord; block++) {
+						int state = (word >> ((position % blocksPerWord) * bitsPerBlock)) & ((1 << bitsPerBlock) - 1);
+						int x = (position >> 8) & 0xF;
+						int y = position & 0xF;
+						int z = (position >> 4) & 0xF;
+
+						int blockId = palette.get(state);
+
+						if (blockId == SKULL_RUNTIME_ID_0 ||
+								blockId == SKULL_RUNTIME_ID_1 ||
+								blockId == SKULL_RUNTIME_ID_2 ||
+								blockId == SKULL_RUNTIME_ID_3 ||
+								blockId == SKULL_RUNTIME_ID_4 ||
+								blockId == SKULL_RUNTIME_ID_5 ||
+								blockId == SKULL_RUNTIME_ID_6 ||
+								blockId == SKULL_RUNTIME_ID_7 ||
+								blockId == SKULL_RUNTIME_ID_8 ||
+								blockId == SKULL_RUNTIME_ID_9 ||
+								blockId == SKULL_RUNTIME_ID_10 ||
+								blockId == SKULL_RUNTIME_ID_11 ||
+								blockId == SKULL_RUNTIME_ID_12 ||
+								blockId == SKULL_RUNTIME_ID_13 ||
+								blockId == SKULL_RUNTIME_ID_14 ||
+								blockId == SKULL_RUNTIME_ID_15) {
+							skulls.put(StuffUtils.convertCoordinatesToLong(chunkXStart + x, (i * 16) + y, chunkZStart + z), blockId);
 						}
+						position++;
 					}
 				}
-				for (int x = 0; x < 16; x++) {
-					for (int z = 0; z < 16; z++) {
-						for (int y = 0; y < 16; y += 2) {
-							long position = StuffUtils.convertCoordinatesToLong(chunkXStart + x, (idx * 16) + y, chunkZStart + z);
-							long positionAbove = StuffUtils.convertCoordinatesToLong(chunkXStart + x, (idx * 16) + y + 1, chunkZStart + z);
-							int state = data.readUnsignedByte();
-
-							int dataValueAbove = state >> 4;
-							int dataValue = state & 0x0F;
-
-							if (skulls.containsKey(position)) {
-								skulls.put(position, dataValue);
-							}
-							if (skulls.containsKey(positionAbove)) {
-								skulls.put(positionAbove, dataValueAbove);
-							}
-						}
-					}
-				}
+				chunkdata.readerIndex(afterPaletteIndex);
 			}
 
-			data.skipBytes(512); // heights
-			data.skipBytes(256); // biomes
-			data.readByte(); // borders
-			VarNumberSerializer.readSVarInt(data); // extra data
-			while (data.readableBytes() != 0) {
-				NBTTagCompoundWrapper tag = ItemStackSerializer.readTag(data, true, con.getVersion());
+			chunkdata.skipBytes(512); // height map
+			chunkdata.skipBytes(256); // biome data
+
+			chunkdata.readByte(); // borders
+			VarNumberSerializer.readSVarInt(chunkdata); // extra data
+
+			while (chunkdata.readableBytes() != 0) {
+				NBTTagCompoundWrapper tag = ItemStackSerializer.readTag(chunkdata, true, con.getVersion());
 
 				if (!isSkull(tag))
 					continue;
@@ -210,9 +261,18 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 
 				Position position = new Position(x, y, z);
 
+				Integer id = skulls.getOrDefault(StuffUtils.convertPositionToLong(position), -1);
+
+				if (id == -1) {
+					plugin.debug("Skull at " + x + ", " + y + ", " + z + " has NBT tag, but doesn't have any ID! Bug?");
+					return;
+				}
+
+				int dataValue = id - SKULL_RUNTIME_ID_0; // If we do the current ID - first skull related ID, we will get the good old data value
+
 				// Is there's any possibility of an skull being on the chunk nbt tags but not really in the world? idk
 				// So that's why getOrDefault is used
-				handleSkull(position, tag, skulls.getOrDefault(StuffUtils.convertPositionToLong(position), 1));
+				handleSkull(position, tag, dataValue);
 			}
 		}
 	}
@@ -271,9 +331,6 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 
 		cachedSkullBlocks.put(StuffUtils.convertPositionToLong(position), cachedSkullBlock);
 
-		if (!isSpawned)
-			return;
-
 		if (!cachedSkullBlock.isCustomSkull())
 			return;
 
@@ -312,6 +369,9 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 			this.position = position;
 		}
 
+		public Position getPosition() {
+			return position;
+		}
 		public boolean isCustomSkull() {
 			return tag != null && url != null;
 		}
@@ -348,9 +408,9 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 
 			CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(76);
 
-			metadata.put(39, new DataWatcherObjectFloatLe(1.05f)); // scale, needs to be a *bit* bigger than the original skull
-			metadata.put(54, new DataWatcherObjectFloatLe(0.001f)); // bb width
-			metadata.put(55, new DataWatcherObjectFloatLe(0.001f)); // bb height
+			metadata.put(EntityMetadata.PeMetaBase.SCALE, new DataWatcherObjectFloatLe(1.05f)); //Needs to be a *bit* bigger than the original skull
+			metadata.put(EntityMetadata.PeMetaBase.BOUNDINGBOX_WIDTH, new DataWatcherObjectFloatLe(0.001f));
+			metadata.put(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH, new DataWatcherObjectFloatLe(0.001f));
 
 			UUID uuid = UUID.randomUUID();
 

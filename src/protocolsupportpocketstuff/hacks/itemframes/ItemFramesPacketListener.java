@@ -43,8 +43,7 @@ import java.util.WeakHashMap;
 
 public class ItemFramesPacketListener extends Connection.PacketListener {
 	private Connection con;
-	private WeakHashMap<Integer, CachedItemFrame> cachedItemFrames = new WeakHashMap<>();
-	private boolean isSpawned = false;
+	private HashMap<Integer, CachedItemFrame> cachedItemFrames = new HashMap<>();
 
 	// Reflection stuff
 	private static Field SPAWN_ENTITY_ID = null;
@@ -64,7 +63,10 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 	// Constants
 	private static final int ACTION_USE_ITEM = 2;
 	private static final int ITEM_FRAME_ENTITY_ID = 71;
-	private static final int ITEM_FRAME_BLOCK_ID = 199;
+	private static final int ITEM_FRAME_BLOCK_ID_DATA0 = 1724;
+	private static final int ITEM_FRAME_BLOCK_ID_DATA1 = 1725;
+	private static final int ITEM_FRAME_BLOCK_ID_DATA2 = 1726;
+	private static final int ITEM_FRAME_BLOCK_ID_DATA3 = 1727;
 
 	public static final String META_KEY = "__PSPS_ITEMFRAMESPACKETLISTENER";
 
@@ -140,6 +142,10 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 	public ItemFramesPacketListener(ProtocolSupportPocketStuff plugin, Connection con) {
 		this.con = con;
 		con.addMetadata(META_KEY, this);
+	}
+
+	public void clean() {
+		cachedItemFrames.clear();
 	}
 
 	@Override
@@ -226,20 +232,6 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		
 		Position position = new Position(0, 0, 0);
 
-		if (packetId == PEPacketIDs.PLAYER_MOVE) {
-			if (isSpawned)
-				return;
-
-			isSpawned = true;
-
-			// Workaround for item frames on login, sending "spawn item frame" packets on login doesn't work
-			// so we are going to spawn them when the player moves
-			// This isn't required for when the player teleports between worlds.
-			for (CachedItemFrame itemFrame : cachedItemFrames.values()) {
-				itemFrame.spawn(this);
-			}
-			return;
-		}
 		if (packetId == PEPacketIDs.PLAYER_ACTION) { // Used for when the player tries to hit a item frame when it doesn't have any item inside of it
 			VarNumberSerializer.readSVarLong(data); // entity ID
 			int action = VarNumberSerializer.readSVarInt(data);
@@ -326,11 +318,6 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		data.readByte();
 		data.readByte();
 
-//		if (packetId == PEPacketIDs.CHANGE_DIMENSION) {
-//			// Clear cached item frames on dimension switch
-//			cachedItemFrames.clear();
-//			return;
-//		}
 		if (packetId == PEPacketIDs.UPDATE_BLOCK) {
 			Position position = new Position(0, 0, 0); 
 			PositionSerializer.readPEPositionTo(data, position);
@@ -341,13 +328,13 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 			if (entry == null)
 				return;
 
-			if (id != ITEM_FRAME_BLOCK_ID)
+			if (id != ITEM_FRAME_BLOCK_ID_DATA0 && id != ITEM_FRAME_BLOCK_ID_DATA1 && id != ITEM_FRAME_BLOCK_ID_DATA2 && id != ITEM_FRAME_BLOCK_ID_DATA3)
 				event.setCancelled(true);
 			return;
 		}
 		if (packetId == PEPacketIDs.CHUNK_DATA) {
-			int chunkX = VarNumberSerializer.readSVarInt(event.getData());
-			int chunkZ = VarNumberSerializer.readSVarInt(event.getData());
+			int chunkX = VarNumberSerializer.readSVarInt(data);
+			int chunkZ = VarNumberSerializer.readSVarInt(data);
 
 			for (Map.Entry<Integer, CachedItemFrame> entry : cachedItemFrames.entrySet()) {
 				int itemChunkX = entry.getValue().getX() >> 4;
@@ -414,16 +401,16 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 
 			switch (facing) {
 				case 3:
-					peFacing = 0;
+					peFacing = ITEM_FRAME_BLOCK_ID_DATA0;
 					break;
 				case 0:
-					peFacing = 2;
+					peFacing = ITEM_FRAME_BLOCK_ID_DATA2;
 					break;
 				case 2:
-					peFacing = 3;
+					peFacing = ITEM_FRAME_BLOCK_ID_DATA3;
 					break;
 				case 1:
-					peFacing = 1;
+					peFacing = ITEM_FRAME_BLOCK_ID_DATA1;
 					break;
 				default:
 					break;
@@ -435,7 +422,7 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		public void spawn(ItemFramesPacketListener listener) {
 			// First we change the block type...
 			// Item Frame block ID is 199
-			UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket(getX(), getY(), getZ(), ItemFramesPacketListener.ITEM_FRAME_BLOCK_ID, getPEFacing());
+			UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket(getX(), getY(), getZ(), getPEFacing());
 
 			PocketCon.sendPocketPacket(listener.con, updateBlockPacket);
 
@@ -447,7 +434,7 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 
 		public void despawn(ItemFramesPacketListener listener) {
 			// We are going to set it to air because... well, there isn't too many other choices I guess *shrugs*
-			UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket(getX(), getY(), getZ(), 0, 0);
+			UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket(getX(), getY(), getZ(), 0);
 			PocketCon.sendPocketPacket(listener.con, updateBlockPacket);
 		}
 

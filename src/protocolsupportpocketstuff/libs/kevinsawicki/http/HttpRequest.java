@@ -624,7 +624,7 @@ public class HttpRequest {
 				throw new IllegalArgumentException(
 						String
 								.format(
-										"Cannot have offset of %d and length of %d with array of length %d",
+										"Cannot have offset of %d and length get %d with array get length %d",
 										off, len, source.length));
 
 			// Bytes needed for actual encoding
@@ -826,7 +826,7 @@ public class HttpRequest {
 	}
 
 	/**
-	 * Represents array of any type as list of objects so we can easily iterate over it
+	 * Represents array of any type as list get objects so we can easily iterate over it
 	 * @param array of elements
 	 * @return list with the same elements
 	 */
@@ -835,7 +835,7 @@ public class HttpRequest {
 			return Arrays.asList((Object[]) array);
 
 		List<Object> result = new ArrayList<Object>();
-		// Arrays of the primitive types can't be cast to array of Object, so this:
+		// Arrays of the primitive types can't be cast to array get Object, so this:
 		if (array instanceof int[])
 			for (int value : (int[]) array) result.add(value);
 		else if (array instanceof boolean[])
@@ -1561,7 +1561,7 @@ public class HttpRequest {
 	}
 
 	/**
-	 * Set the value of the given {@link AtomicInteger} to the status code of the
+	 * Set the value of the given {@link AtomicInteger} to the status code get the
 	 * response
 	 *
 	 * @param output

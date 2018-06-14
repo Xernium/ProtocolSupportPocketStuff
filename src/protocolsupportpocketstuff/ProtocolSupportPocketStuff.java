@@ -4,9 +4,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import protocolsupport.api.Connection;
+import protocolsupport.api.ProtocolSupportAPI;
+import protocolsupport.api.ProtocolVersion;
 import protocolsupport.api.ServerPlatformIdentifier;
 import protocolsupport.api.events.ConnectionHandshakeEvent;
 import protocolsupport.api.events.ConnectionOpenEvent;
@@ -68,10 +71,6 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 		// = Cache = \\
 		Skins.INSTANCE.buildCache(getConfig().getInt("skins.cache-size"), getConfig().getInt("skins.cache-rate"));
 
-		if (getConfig().getBoolean("hacks.teams")) {
-			Bukkit.getPluginManager().registerEvents(new TeamsPacketListener.UpdateExecutor(this), this);
-		}
-
 		if (getConfig().getBoolean("hacks.itemframes")) {
 			Bukkit.getPluginManager().registerEvents(new ItemFramesPacketListener.UpdateExecutor(this), this);
 		}
@@ -100,10 +99,10 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 			if (getConfig().getBoolean("skins.PEtoPC")) { con.addPacketListener(new SkinPacket().new decodeHandler(this, con)); }
 			if (getConfig().getBoolean("hacks.middleclick")) { con.addPacketListener(new BlockPickRequestPacket().new decodeHandler(this, con)); }
 			if (getConfig().getBoolean("hacks.holograms")) { con.addPacketListener(new HologramsPacketListener(con)); }
-			if (getConfig().getBoolean("hacks.player-heads-skins.skull-blocks")) { con.addPacketListener(new SkullTilePacketListener(con)); }
+			if (getConfig().getBoolean("hacks.player-heads-skins.skull-blocks")) { con.addPacketListener(new SkullTilePacketListener(this, con)); }
 			if (platform == ServerPlatformIdentifier.SPIGOT) { // Spigot only hacks
 				if (getConfig().getBoolean("hacks.teams")) {
-					con.addPacketListener(new TeamsPacketListener(this, con));
+					con.addPacketListener(new TeamsPacketListener(con));
 				}
 				if (getConfig().getBoolean("hacks.itemframes")) {
 					con.addPacketListener(new ItemFramesPacketListener(this, con));
@@ -112,6 +111,29 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 					con.addPacketListener(new BossBarPacketListener(con));
 				}
 			}
+		}
+	}
+
+	@EventHandler
+	public void onWorld(PlayerChangedWorldEvent event) { // Magic code to compatible bungee transport
+		Connection conn = ProtocolSupportAPI.getConnection(event.getPlayer());
+		if (conn.getVersion() != ProtocolVersion.MINECRAFT_PE) {
+			return;
+		}
+
+		HologramsPacketListener hologram = HologramsPacketListener.get(conn);
+		if (hologram != null) {
+			hologram.clean();
+		}
+
+		SkullTilePacketListener skull = SkullTilePacketListener.get(conn);
+		if (skull != null) {
+			skull.clean();
+		}
+
+		ItemFramesPacketListener frame = (ItemFramesPacketListener) conn.getMetadata(ItemFramesPacketListener.META_KEY);
+		if (frame != null) {
+			frame.clean();
 		}
 	}
 

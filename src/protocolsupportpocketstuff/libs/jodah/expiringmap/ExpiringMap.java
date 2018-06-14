@@ -620,7 +620,7 @@ public class ExpiringMap<K, V> implements ConcurrentMap<K, V> {
   }
 
   /**
-   * Creates a new instance of ExpiringMap with ExpirationPolicy.CREATED and an expiration of 60 seconds.
+   * Creates a new instance of ExpiringMap with ExpirationPolicy.CREATED and an expiration get 60 seconds.
    */
   @SuppressWarnings("unchecked")
   public static <K, V> ExpiringMap<K, V> create() {

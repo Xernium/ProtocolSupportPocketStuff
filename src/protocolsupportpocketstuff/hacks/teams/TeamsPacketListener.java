@@ -27,6 +27,7 @@ import protocolsupportpocketstuff.packet.play.EntityDataPacket;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,34 +43,13 @@ public class TeamsPacketListener extends Connection.PacketListener {
 
 	private static final String META_KEY = "__PSPS_TEAMSPACKETLISTENER";
 
-	public TeamsPacketListener(ProtocolSupportPocketStuff plugin, Connection con) {
+	public TeamsPacketListener(Connection con) {
 		this.con = con;
 		con.addMetadata(META_KEY, this);
 	}
 
 	public static TeamsPacketListener get(Player p) {
 		return (TeamsPacketListener) ProtocolSupportAPI.getConnection(p).getMetadata(META_KEY);
-	}
-
-	public static class UpdateExecutor implements Listener {
-
-		private final ProtocolSupportPocketStuff plugin;
-
-		public UpdateExecutor(ProtocolSupportPocketStuff plugin) {
-			this.plugin = plugin;
-		}
-
-		@EventHandler(priority = EventPriority.LOW)
-		public void handle(PlayerJoinEvent event) {
-			Connection conn = ProtocolSupportAPI.getConnection(event.getPlayer());
-			if (!(conn.getVersion() == ProtocolVersion.MINECRAFT_PE)) {
-				return;
-			}
-			if (conn.getMetadata("_PE_TRANSFER_") == null) {
-				return;
-			}
-			Bukkit.getScheduler().runTaskLater(plugin, () -> get(event.getPlayer()).updateAll(), 20);
-		}
 	}
 
 	static {
@@ -89,7 +69,7 @@ public class TeamsPacketListener extends Connection.PacketListener {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public void updateAll() {
 		cachedTeams.asMap().values().forEach(cachedTeam -> cachedTeam.updatePlayers(this));
 	}

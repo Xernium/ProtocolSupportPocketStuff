@@ -1,11 +1,9 @@
 package protocolsupportpocketstuff.hacks.bossbars;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.server.v1_12_R1.IChatBaseComponent;
 import net.minecraft.server.v1_12_R1.PacketPlayOutBoss;
 import protocolsupport.api.Connection;
-import protocolsupport.protocol.serializer.VarNumberSerializer;
-import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
+import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectFloatLe;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectString;
@@ -28,7 +26,6 @@ public class BossBarPacketListener extends Connection.PacketListener {
 	
 	private Connection con;
 	private HashMap<Long, CachedBossBar> cachedBossBars = new HashMap<>();
-	private boolean isSpawned = false;
 
 	// Reflection stuff
 	private static Field BOSS_UUID;
@@ -59,28 +56,6 @@ public class BossBarPacketListener extends Connection.PacketListener {
 		this.con = con;
 	}
 
-	@Override
-	public void onRawPacketReceiving(RawPacketEvent event) {
-		super.onRawPacketReceiving(event);
-
-		ByteBuf data = event.getData();
-		int packetId = VarNumberSerializer.readVarInt(data);
-
-		if (packetId == PEPacketIDs.PLAYER_MOVE) {
-			if (isSpawned)
-				return;
-
-			isSpawned = true;
-
-			// Workaround for holograms on login, sending "spawn hologram" packets on login doesn't work
-			// so we are going to spawn them when the player moves
-			// This isn't required for when the player teleports between worlds.
-			for (CachedBossBar cachedBossBar : cachedBossBars.values()) {
-				cachedBossBar.spawn(this);
-			}
-			return;
-		}
-	}
 
 	@Override
 	public void onPacketSending(PacketEvent event) {
@@ -104,8 +79,6 @@ public class BossBarPacketListener extends Connection.PacketListener {
 
 			cachedBossBars.put(unique, bossBar);
 
-			if (!isSpawned)
-				return;
 
 			bossBar.spawn(this);
 			return;
@@ -128,8 +101,6 @@ public class BossBarPacketListener extends Connection.PacketListener {
 			CachedBossBar bossBar = cachedBossBars.get(unique);
 			bossBar.title = StuffUtils.toLegacy(title);
 
-			if (!isSpawned)
-				return;
 
 			bossBar.updateMetadata(this);
 			return;
@@ -188,8 +159,8 @@ public class BossBarPacketListener extends Connection.PacketListener {
 		}
 
 		public void updateMetadata(BossBarPacketListener listener) {
-			CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(76);
-			metadata.put(4, new DataWatcherObjectString(title));
+			CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.NAMETAG);
+			metadata.put(EntityMetadata.PeMetaBase.NAMETAG, new DataWatcherObjectString(title));
 			PocketCon.sendPocketPacket(listener.con, new EntityDataPacket(unique, metadata));
 		}
 
