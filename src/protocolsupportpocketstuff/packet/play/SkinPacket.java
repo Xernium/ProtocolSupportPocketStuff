@@ -117,7 +117,7 @@ public class SkinPacket extends PEPacket {
 			pm.callEvent(new PocketChangeSkinEvent(connection,
 					skinStorageId, parent.getUUID(), SkinUtils.fromData(parent.getSkinData()), parent.getSkinName().equals("skin.Standard.CustomSlim")));
 		}
-		
+
 	}
-	
+
 }

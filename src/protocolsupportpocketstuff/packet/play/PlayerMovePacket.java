@@ -50,5 +50,56 @@ public class PlayerMovePacket extends PEPacket {
 	}
 
 	@Override
-	public void readFromClientData(Connection connection, ByteBuf clientData) { }
+	public void readFromClientData(Connection connection, ByteBuf clientdata) {
+		this.entityId = VarNumberSerializer.readSVarLong(clientdata);
+		this.x = clientdata.readFloatLE();
+		this.y = clientdata.readFloatLE();
+		this.z = clientdata.readFloatLE();
+		this.pitch = clientdata.readFloatLE();
+		this.headYaw = clientdata.readFloatLE();
+		this.mode = clientdata.readByte();
+		this.onGround = clientdata.readBoolean();
+		VarNumberSerializer.readVarInt(clientdata);
+		if (mode == 2) {
+			VarNumberSerializer.readSVarInt(clientdata);
+			VarNumberSerializer.readSVarInt(clientdata);
+		}
+	}
+
+	public long getEntityId() {
+		return entityId;
+	}
+
+	public float getX() {
+		return x;
+	}
+
+	public float getY() {
+		return y;
+	}
+
+	public float getZ() {
+		return z;
+	}
+
+	public float getPitch() {
+		return pitch;
+	}
+
+	public float getHeadYaw() {
+		return headYaw;
+	}
+
+	public float getYaw() {
+		return yaw;
+	}
+
+	public int getMode() {
+		return mode;
+	}
+
+	public boolean isOnGround() {
+		return onGround;
+	}
+
 }

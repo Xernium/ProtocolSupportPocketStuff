@@ -37,7 +37,7 @@ public class BlockPickRequestPacket extends PEPacket {
 		huh = clientdata.readBoolean();
 		slot = clientdata.readByte();
 	}
-	
+
 	public class decodeHandler extends PEPacket.decodeHandler {
 
 		public decodeHandler(ProtocolSupportPocketStuff plugin, Connection connection) {
@@ -49,7 +49,7 @@ public class BlockPickRequestPacket extends PEPacket {
 			BlockPickRequestPacket parent = BlockPickRequestPacket.this;
 			PickRequester.getInstance().handleBlockPick(connection.getPlayer(), position);
 		}
-		
+
 	}
 
 }

@@ -2,7 +2,9 @@ package protocolsupportpocketstuff.packet.play;
 
 import io.netty.buffer.ByteBuf;
 import protocolsupport.api.Connection;
+import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
+import protocolsupport.protocol.serializer.ItemStackSerializer;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
@@ -10,6 +12,7 @@ import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
 import protocolsupport.protocol.utils.i18n.I18NData;
 import protocolsupport.utils.CollectionsUtils;
+import protocolsupport.zplatform.itemstack.ItemStackWrapper;
 import protocolsupportpocketstuff.packet.PEPacket;
 
 import java.util.UUID;
@@ -54,8 +57,13 @@ public class SpawnPlayerPacket extends PEPacket {
 	public void toData(Connection connection, ByteBuf serializer) {
 		MiscSerializer.writeUUID(serializer, connection.getVersion(), uuid);
 		StringSerializer.writeString(serializer, connection.getVersion(), name);
+		StringSerializer.writeString(serializer, ProtocolVersion.MINECRAFT_PE, "");// third party name
+		VarNumberSerializer.writeSVarInt(serializer, 0);// platform id
+
 		VarNumberSerializer.writeSVarLong(serializer, entityId); // entity ID
 		VarNumberSerializer.writeVarLong(serializer, entityId); // runtime ID
+		StringSerializer.writeString(serializer, ProtocolVersion.MINECRAFT_PE, "");// platform chat id
+
 		serializer.writeFloatLE(x); // x
 		serializer.writeFloatLE(y); // y
 		serializer.writeFloatLE(z); // z
@@ -66,9 +74,9 @@ public class SpawnPlayerPacket extends PEPacket {
 		serializer.writeFloatLE(headYaw); // yaw
 		serializer.writeFloatLE(yaw); // yaw
 
-		VarNumberSerializer.writeSVarInt(serializer, 0); // held item stack
+		VarNumberSerializer.writeSVarInt(serializer, 0); //held itemstack (it is actually a slot, but we only send null itemstack here, so we only write 0 id)
 
-		EntityMetadata.encodeMeta(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
+		EntityMetadata.write(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
 
 		//adventure settings
 		VarNumberSerializer.writeVarInt(serializer, 0);

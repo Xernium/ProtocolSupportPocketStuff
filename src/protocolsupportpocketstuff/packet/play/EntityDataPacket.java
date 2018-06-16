@@ -14,6 +14,8 @@ public class EntityDataPacket extends PEPacket {
 	private long entityId;
 	private CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata;
 
+	public EntityDataPacket() { }
+
 	public EntityDataPacket(long entityId, CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata) {
 		this.entityId = entityId;
 		this.metadata = metadata;
@@ -27,9 +29,17 @@ public class EntityDataPacket extends PEPacket {
 	@Override
 	public void toData(Connection connection, ByteBuf serializer) {
 		VarNumberSerializer.writeVarLong(serializer, entityId);
-		EntityMetadata.encodeMeta(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
+		EntityMetadata.write(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
 	}
 
 	@Override
-	public void readFromClientData(Connection connection, ByteBuf clientData) { }
+	public void readFromClientData(Connection connection, ByteBuf clientdata) {
+		this.entityId = VarNumberSerializer.readVarLong(clientdata);
+		clientdata.skipBytes(clientdata.readableBytes());
+	}
+
+	public long getEntityId() {
+		return entityId;
+	}
+
 }

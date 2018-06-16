@@ -71,7 +71,7 @@ public class SpawnEntityPacket extends PEPacket {
 			serializer.writeFloatLE(attribute.getMaximum());
 		}
 
-		EntityMetadata.encodeMeta(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
+		EntityMetadata.write(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
 
 		VarNumberSerializer.writeVarInt(serializer, 0); //links, not used
 	}
