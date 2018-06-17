@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 public class ItemFramesPacketListener extends Connection.PacketListener {
 	private Connection con;
@@ -63,10 +62,11 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 	// Constants
 	private static final int ACTION_USE_ITEM = 2;
 	private static final int ITEM_FRAME_ENTITY_ID = 71;
-	private static final int ITEM_FRAME_BLOCK_ID_DATA0 = 1724;
-	private static final int ITEM_FRAME_BLOCK_ID_DATA1 = 1725;
-	private static final int ITEM_FRAME_BLOCK_ID_DATA2 = 1726;
-	private static final int ITEM_FRAME_BLOCK_ID_DATA3 = 1727;
+
+    private static final int ITEM_FRAME_BLOCK_ID_DATA0 = 1771,
+            ITEM_FRAME_BLOCK_ID_DATA1 = 1772,
+            ITEM_FRAME_BLOCK_ID_DATA2 = 1773,
+            ITEM_FRAME_BLOCK_ID_DATA3 = 1774;
 
 	public static final String META_KEY = "__PSPS_ITEMFRAMESPACKETLISTENER";
 
@@ -396,7 +396,7 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 			return spawnTag;
 		}
 
-		public int getPEFacing() {
+		public int getPERuntimeId() {
 			int peFacing = 0;
 
 			switch (facing) {
@@ -422,7 +422,7 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		public void spawn(ItemFramesPacketListener listener) {
 			// First we change the block type...
 			// Item Frame block ID is 199
-			UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket(getX(), getY(), getZ(), getPEFacing());
+			UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket(getX(), getY(), getZ(), getPERuntimeId());
 
 			PocketCon.sendPocketPacket(listener.con, updateBlockPacket);
 
