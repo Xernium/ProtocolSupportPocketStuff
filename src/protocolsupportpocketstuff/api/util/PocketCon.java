@@ -34,8 +34,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class PocketCon {
-	
-    //=====================================================\\
+
+	public static final String META_ON_MODAL = "__PS_ON_MODAL";
+
+	//=====================================================\\
     //						Getting						   \\
     //=====================================================\\
 
@@ -138,20 +140,30 @@ public class PocketCon {
 
 		PocketCon.removeCallback(connection);
 
-		modalCallback.onModalResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled());
-		if (modalCallback instanceof SimpleFormCallback) {
-			SimpleFormCallback simpleFormCallback = (SimpleFormCallback) modalCallback;
-			int clickedButton = event instanceof SimpleFormResponseEvent ? ((SimpleFormResponseEvent) event).getClickedButton() : -1;
-			simpleFormCallback.onSimpleFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), clickedButton);
-		} else if (modalCallback instanceof ComplexFormCallback) {
-			ComplexFormCallback complexFormCallback = (ComplexFormCallback) modalCallback;
-			JsonArray jsonArray = event instanceof ComplexFormResponseEvent ? ((ComplexFormResponseEvent) event).getJsonArray() : null;
-			complexFormCallback.onComplexFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), jsonArray);
-		} else if (modalCallback instanceof ModalWindowCallback) {
-			ModalWindowCallback modalWindowResponseEvent = (ModalWindowCallback) modalCallback;
-			boolean result = event instanceof ModalWindowResponseEvent && ((ModalWindowResponseEvent) event).getResult();
-			modalWindowResponseEvent.onModalWindowResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), result);
+		connection.addMetadata(META_ON_MODAL, "");
+
+		try {
+			modalCallback.onModalResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled());
+			if (modalCallback instanceof SimpleFormCallback) {
+				SimpleFormCallback simpleFormCallback = (SimpleFormCallback) modalCallback;
+				int clickedButton = event instanceof SimpleFormResponseEvent ? ((SimpleFormResponseEvent) event).getClickedButton() : -1;
+				simpleFormCallback.onSimpleFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), clickedButton);
+			} else if (modalCallback instanceof ComplexFormCallback) {
+				ComplexFormCallback complexFormCallback = (ComplexFormCallback) modalCallback;
+				JsonArray jsonArray = event instanceof ComplexFormResponseEvent ? ((ComplexFormResponseEvent) event).getJsonArray() : null;
+				complexFormCallback.onComplexFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), jsonArray);
+			} else if (modalCallback instanceof ModalWindowCallback) {
+				ModalWindowCallback modalWindowResponseEvent = (ModalWindowCallback) modalCallback;
+				boolean result = event instanceof ModalWindowResponseEvent && ((ModalWindowResponseEvent) event).getResult();
+				modalWindowResponseEvent.onModalWindowResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), result);
+			}
+		} finally {
+			connection.removeMetadata(META_ON_MODAL);
 		}
+	}
+
+	public static boolean isOnModal(Connection connection) {
+		return connection.hasMetadata(META_ON_MODAL);
 	}
 
 	/***

@@ -78,6 +78,10 @@ public class PocketPlayer {
 		return PocketCon.sendModal(ProtocolSupportAPI.getConnection(player), modal, modalCallback);
 	}
 
+	public static boolean isOnModal(Player player) {
+		return PocketCon.isOnModal(ProtocolSupportAPI.getConnection(player));
+	}
+
 	/***
 	 * Sends a modal with an id specified.
 	 * Nonono, don't use custom ids!
