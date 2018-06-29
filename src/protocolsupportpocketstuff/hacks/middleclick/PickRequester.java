@@ -19,7 +19,7 @@ public class PickRequester {
 			@Override
 			public void run() {
 				Block picked = player.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ());
-				System.out.println("BLOCKTYPE: " + picked.getType());
+//				System.out.println("BLOCKTYPE: " + picked.getType());
 			}
 		});
 	}

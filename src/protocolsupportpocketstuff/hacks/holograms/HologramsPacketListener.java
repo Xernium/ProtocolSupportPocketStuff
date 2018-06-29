@@ -213,8 +213,8 @@ public class HologramsPacketListener extends Connection.PacketListener {
             int metaKey = VarNumberSerializer.readVarInt(data);
             int metaType = VarNumberSerializer.readVarInt(data) % 8;
 
-            System.out.println("!!! meta type " + metaType);
-            System.out.println("!!! meta key " + metaKey);
+//            System.out.println("!!! meta type " + metaType);
+//            System.out.println("!!! meta key " + metaKey);
 
             ReadableDataWatcherObject<?> dw = DATA_WATCHERS.get(metaType);
 
@@ -227,10 +227,10 @@ public class HologramsPacketListener extends Connection.PacketListener {
 
             if (metaKey == 0) {
                 long peBaseFlags = ((Number) dw.getValue()).longValue();
-                System.out.println("!!! meta ctx " + Long.toBinaryString(peBaseFlags));
+//                System.out.println("!!! meta ctx " + Long.toBinaryString(peBaseFlags));
                 invisible = ((peBaseFlags >> (EntityMetadata.PeMetaBase.FLAG_INVISIBLE - 1)) & 1) == 1;
                 shownametag = ((peBaseFlags >> (EntityMetadata.PeMetaBase.FLAG_SHOW_NAMETAG - 1)) & 1) == 1;
-                System.out.println(String.format("!!! invisible=%s shownametag=%s", invisible, shownametag));
+//                System.out.println(String.format("!!! invisible=%s shownametag=%s", invisible, shownametag));
             }
         }
 
@@ -256,7 +256,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
 
             CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH + 1);
             long peBaseFlags = entity.getDataCache().getPeBaseFlags();
-            System.out.println("!!! sent new meta ctx " + Long.toBinaryString(peBaseFlags));
+//            System.out.println("!!! sent new meta ctx " + Long.toBinaryString(peBaseFlags));
 //            metadata.put(EntityMetadata.PeMetaBase.FLAGS, new DataWatcherObjectSVarLong(peBaseFlags));
             metadata.put(EntityMetadata.PeMetaBase.NAMETAG, new DataWatcherObjectString(nametag));
 			metadata.put(EntityMetadata.PeMetaBase.SCALE, new DataWatcherObjectFloatLe(0.001f)); // scale
