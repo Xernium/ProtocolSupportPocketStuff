@@ -2,6 +2,7 @@ package protocolsupportpocketstuff.packet.play;
 
 import io.netty.buffer.ByteBuf;
 import protocolsupport.api.Connection;
+import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
@@ -61,6 +62,9 @@ public class SpawnEntityPacket extends PEPacket {
 		serializer.writeFloatLE(motionZ); // motz
 		serializer.writeFloatLE(pitch); // pitch
 		serializer.writeFloatLE(yaw); // yaw
+		if (connection.getVersion().getId() > ProtocolVersion.MINECRAFT_PE.getId()) {
+			serializer.writeFloatLE(yaw); // head yaw
+		}
 
 		// We can't use SetAttributePackets#encodeAttributes because MCPE uses an different format in SpawnEntityPacket (why mojang?)
 		VarNumberSerializer.writeVarInt(serializer, attributes.size());

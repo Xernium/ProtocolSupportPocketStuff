@@ -96,20 +96,32 @@ public class HologramsPacketListener extends Connection.PacketListener {
         data.readByte();
         data.readByte();
 
-        if (packetId == PEPacketIDs.ENTITY_TELEPORT) {
+        if (packetId == PEPacketIDs.MOVE_ENTITY_ABSOLUTE) {
             long entityId = VarNumberSerializer.readVarLong(data);
 
             if (!cachedArmorStands.containsKey(entityId))
                 return;
 
-            float x = data.readFloatLE();
-            float y = data.readFloatLE() + (float) Y_OFFSET;
-            float z = data.readFloatLE();
-            int pitch = data.readByte();
-            int headYaw = data.readByte();
-            int yaw = data.readByte();
-            boolean onGround = data.readBoolean();
-            event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
+            if (con.getVersion() == ProtocolVersion.MINECRAFT_PE) {
+                float x = data.readFloatLE();
+                float y = data.readFloatLE() + (float) Y_OFFSET;
+                float z = data.readFloatLE();
+                int pitch = data.readByte();
+                int headYaw = data.readByte();
+                int yaw = data.readByte();
+                boolean onGround = data.readBoolean();
+                event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
+            } else {
+                byte flag = data.readByte();
+                boolean onGround = (flag & 128) == 128;
+                float x = data.readFloatLE();
+                float y = data.readFloatLE() + (float) Y_OFFSET;
+                float z = data.readFloatLE();
+                int pitch = data.readByte();
+                int headYaw = data.readByte();
+                int yaw = data.readByte();
+                event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
+            }
             return;
         }
         if (packetId == PEPacketIDs.SPAWN_ENTITY) {
@@ -133,6 +145,9 @@ public class HologramsPacketListener extends Connection.PacketListener {
 
             data.readFloatLE(); // pitch
             data.readFloatLE(); // yaw
+            if (con.getVersion().getId() > ProtocolVersion.MINECRAFT_PE.getId()) {
+                data.readFloatLE();// head yaw
+            }
 
             {
                 int len = VarNumberSerializer.readVarInt(data);// attribute length, unused

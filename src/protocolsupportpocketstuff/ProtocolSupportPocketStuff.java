@@ -66,7 +66,7 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 
 		// = SPI = \\
 		if(getConfig().getBoolean("skins.PCtoPE")) { PESkinsProviderSPI.setProvider(new PcToPeProvider(this)); }
-		PEMetaProviderSPI.setProvider(new MetadataProvider());
+//		PEMetaProviderSPI.setProvider(new MetadataProvider());
 
 		// = Cache = \\
 		Skins.INSTANCE.buildCache(getConfig().getInt("skins.cache-size"), getConfig().getInt("skins.cache-rate"));
