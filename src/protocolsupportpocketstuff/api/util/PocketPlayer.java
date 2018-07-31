@@ -8,10 +8,10 @@ import org.bukkit.util.Vector;
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolType;
 import protocolsupportpocketstuff.api.modals.Modal;
+import protocolsupportpocketstuff.api.modals.ModalType;
 import protocolsupportpocketstuff.api.modals.callback.ModalCallback;
 import protocolsupportpocketstuff.api.skins.PocketSkinModel;
 import protocolsupportpocketstuff.packet.PEPacket;
-import protocolsupportpocketstuff.storage.Modals;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,7 +41,6 @@ public class PocketPlayer {
 	 * Gets all pocket players on the server.
 	 * <br/><br/>
 	 * <i>If your goal is sending packets, we advise to use
-	 * {@link PocketCon.getPocketConnections} instead for better performance.</i>
 	 * @return all pocket players.
 	 */
 	public static Collection<? extends Player> getPocketPlayers() {
@@ -64,7 +63,6 @@ public class PocketPlayer {
 	 * Sends a modal to a player and gets the callback id. 
 	 * <br/><br/>
 	 * <i>When sending multiple packets to pocket it is advised
-	 * to get the connection using {@link ProtocolSupportAPI.getConnection}
 	 * first and then use {@link PocketCon} to send the packets.</i>
 	 * @param player
 	 * @param modal
@@ -86,29 +84,26 @@ public class PocketPlayer {
 	 * Sends a modal with an id specified.
 	 * Nonono, don't use custom ids!
 	 * If you like you can use this function in combination with
-	 * {@link Modals.INSTANCE.takeId} to send custom JSON to the player.
 	 * <br/><br/>
 	 * <i>When sending multiple packets to pocket it is advised
-	 * to get the connection using {@link ProtocolSupportAPI.getConnection}
 	 * first and then use {@link PocketCon} to send the packets.</i>
 	 * @param player
 	 * @param modalId
 	 * @param modalJSON
 	 * @return the modal's callback id.
 	 */
-	public static int sendModal(Player player, int modalId, String modalJSON) {
-		return PocketCon.sendModal(ProtocolSupportAPI.getConnection(player), modalId, modalJSON);
-	}
+    public static int sendModal(Player player, int modalId, ModalType modalType, String modalJSON) {
+        return PocketCon.sendModal(ProtocolSupportAPI.getConnection(player), modalId, modalType, modalJSON);
+    }
 
-	public static int sendModal(Player player, int modalId, String modalJSON, ModalCallback modalCallback) {
-		return PocketCon.sendModal(ProtocolSupportAPI.getConnection(player), modalId, modalJSON, modalCallback);
+    public static int sendModal(Player player, int modalId, ModalType modalType, String modalJSON, ModalCallback modalCallback) {
+        return PocketCon.sendModal(ProtocolSupportAPI.getConnection(player), modalId, modalType, modalJSON, modalCallback);
 	}
 	
 	/***
 	 * Sends a PocketSkin to a pocket connection.
 	 * <br/><br/>
 	 * <i>When sending multiple packets to pocket it is advised
-	 * to get the connection using {@link ProtocolSupportAPI.getConnection}
 	 * first and then use {@link PocketCon} to send the packets.</i>
 	 * @param player
 	 * @param uuid
@@ -123,7 +118,6 @@ public class PocketPlayer {
 	 * Sends a dimension change to a pocket connection.
 	 * <br/><br/>
 	 * <i>When sending multiple packets to pocket it is advised
-	 * to get the connection using {@link ProtocolSupportAPI.getConnection}
 	 * first and then use {@link PocketCon} to send the packets.</i>
 	 * @param player
 	 * @param environment
@@ -204,7 +198,6 @@ public class PocketPlayer {
 	 * Sends a packet to pocket.
 	 * <br/><br/>
 	 * <i>When sending multiple packets to pocket it is advised
-	 * to get the connection using {@link ProtocolSupportAPI.getConnection}
 	 * first and then use {@link PocketCon} to send the packets.</i>
 	 * @param player
 	 * @param packet

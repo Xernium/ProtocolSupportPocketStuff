@@ -1,12 +1,12 @@
 package protocolsupportpocketstuff.api.util;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.World.Environment;
 import org.bukkit.util.Vector;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolType;
 import protocolsupport.libs.com.google.gson.JsonArray;
-import protocolsupport.libs.com.google.gson.JsonObject;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupportpocketstuff.api.event.ComplexFormResponseEvent;
 import protocolsupportpocketstuff.api.event.ModalResponseEvent;
@@ -22,6 +22,7 @@ import protocolsupportpocketstuff.api.skins.PocketSkinModel;
 import protocolsupportpocketstuff.packet.PEPacket;
 import protocolsupportpocketstuff.packet.play.DimensionPacket;
 import protocolsupportpocketstuff.packet.play.ModalRequestPacket;
+import protocolsupportpocketstuff.packet.play.ServerSettingsRequestPacket;
 import protocolsupportpocketstuff.packet.play.SkinPacket;
 import protocolsupportpocketstuff.packet.play.TransferPacket;
 import protocolsupportpocketstuff.storage.Modals;
@@ -43,7 +44,6 @@ public class PocketCon {
 
 	/***
 	 * Checks if a connection is a pocket connection.
-	 * @param player
 	 * @return the truth.
 	 */
 	public static boolean isPocketConnection(Connection connection) {
@@ -76,32 +76,30 @@ public class PocketCon {
 	 * @return
 	 */
 	public static int sendModal(Connection connection, Modal modal) {
-		return sendModal(connection, Modals.INSTANCE.takeId(), modal.toJSON(), null);
+		return sendModal(connection, Modals.INSTANCE.takeId(), modal.getType(), modal.toJSON(), null);
 	}
 
 	public static int sendModal(Connection connection, Modal modal, ModalCallback callback) {
-		return sendModal(connection, Modals.INSTANCE.takeId(), modal.toJSON(), callback);
+		return sendModal(connection, Modals.INSTANCE.takeId(), modal.getType(), modal.toJSON(), callback);
 	}
 
 	/***
 	 * Sends a modal with an id specified.
 	 * Nonono, don't use custom ids!
 	 * If you like you can use this function in combination with
-	 * {@link Modals.INSTANCE.takeId} to send custom JSON to the player.
 	 * @param id
-	 * @param modal
 	 * @return the modal's callback id.
 	 */
-	public static int sendModal(Connection connection, int id, String modalJSON) {
-		sendModal(connection, id, modalJSON, null);
+	public static int sendModal(Connection connection, int id, ModalType modalType, String modalJSON) {
+		sendModal(connection, id, modalType, modalJSON, null);
 		return id;
 	}
 
-	public static int sendModal(Connection connection, int id, String modalJSON, ModalCallback callback) {
+	public static int sendModal(Connection connection, int id, ModalType modalType, String modalJSON, ModalCallback callback) {
 		if (callback != null)
 			addCallback(connection, id, callback);
 
-		connection.addMetadata("modalType", detectModalType(modalJSON));
+		connection.addMetadata("modalType", modalType);
 		sendPocketPacket(connection, new ModalRequestPacket(id, modalJSON));
 		return id;
 	}
@@ -112,12 +110,6 @@ public class PocketCon {
 
 	public static ModalType getModalType(Connection connection) {
 		return (ModalType) connection.getMetadata("modalType");
-	}
-
-	public static ModalType detectModalType(String modalJSON) {
-		JsonObject jsonParser = StuffUtils.JSON_PARSER.parse(modalJSON).getAsJsonObject();
-		String pocketType = jsonParser.get("type").getAsString();
-		return ModalType.getByPeName(pocketType);
 	}
 
 	public static void addCallback(Connection connection, int id, ModalCallback callback) {
@@ -135,8 +127,17 @@ public class PocketCon {
 	public static void handleModalResponse(Connection connection, ModalResponseEvent event) {
 		ModalCallback modalCallback = PocketCon.getCallback(connection);
 
-		if (modalCallback == null)
-			return;
+		if (modalCallback == null) {
+			if (!connection.hasMetadata(ServerSettingsRequestPacket.META_KEY)) {
+				return;
+			}
+			Pair<Integer, ModalCallback> metadata = (Pair<Integer, ModalCallback>) connection.getMetadata(ServerSettingsRequestPacket.META_KEY);
+			if (metadata.getKey().intValue() != event.getModalId()) {
+				return;
+			}
+			modalCallback = metadata.getValue();
+			connection.removeMetadata(ServerSettingsRequestPacket.META_KEY);
+		}
 
 		PocketCon.removeCallback(connection);
 

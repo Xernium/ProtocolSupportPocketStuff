@@ -27,6 +27,7 @@ import protocolsupportpocketstuff.metadata.MetadataProvider;
 import protocolsupportpocketstuff.packet.handshake.ClientLoginPacket;
 import protocolsupportpocketstuff.packet.play.BlockPickRequestPacket;
 import protocolsupportpocketstuff.packet.play.ModalResponsePacket;
+import protocolsupportpocketstuff.packet.play.ServerSettingsRequestPacket;
 import protocolsupportpocketstuff.packet.play.SkinPacket;
 import protocolsupportpocketstuff.resourcepacks.ResourcePackManager;
 import protocolsupportpocketstuff.skin.PcToPeProvider;
@@ -111,6 +112,8 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 					con.addPacketListener(new BossBarPacketListener(con));
 				}
 			}
+
+			con.addPacketListener(new ServerSettingsRequestPacket().new decodeHandler(this, con));
 		}
 	}
 
