@@ -59,8 +59,7 @@ public class ClientLoginPacket extends PEPacket {
 				result.write(buffer, 0, length);
 			}
 			clientPayload = decodeToken(result.toString("UTF-8"));
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Exception ignored) {
 		}
 	}
 
