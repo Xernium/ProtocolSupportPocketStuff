@@ -192,8 +192,8 @@ public class HologramsPacketListener extends Connection.PacketListener {
 
             armorStand.setHologram(true);
 
-            if (armorStand.spawned)
-                return;
+//            if (armorStand.spawned)
+//                return;
 
             // Kill current armor stand
             event.setData(new EntityDestroyPacket(entityId).encode(con));
