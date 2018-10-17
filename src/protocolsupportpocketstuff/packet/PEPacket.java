@@ -5,6 +5,8 @@ import io.netty.buffer.Unpooled;
 import org.bukkit.plugin.PluginManager;
 import protocolsupport.api.Connection;
 import protocolsupport.api.Connection.PacketListener;
+import protocolsupport.api.ProtocolVersion;
+import protocolsupport.protocol.pipeline.version.v_pe.PEPacketEncoder;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
 
@@ -18,17 +20,16 @@ public abstract class PEPacket {
 		
 	public ByteBuf encode(Connection connection) {
 		ByteBuf serializer = Unpooled.buffer();
-		VarNumberSerializer.writeVarInt(serializer, getPacketId());
-		serializer.writeByte(0);
-		serializer.writeByte(0);
+		PEPacketEncoder.sWritePacketId(connection.getVersion(), serializer, getPacketId());
 		toData(connection, serializer);
 		return serializer;
 	}
 	
-	public void decode(Connection connection, ByteBuf clientData) {
-		clientData.readByte();
-		clientData.readByte();
-		readFromClientData(connection, clientData);
+	public void decode(Connection connection, ByteBuf buf) {
+	    if (connection.getVersion().isBeforeOrEq(ProtocolVersion.MINECRAFT_PE_1_5)) {
+	        buf.readShort();
+        }
+		readFromClientData(connection, buf);
 	}
 	
 	public abstract class decodeHandler extends PacketListener {

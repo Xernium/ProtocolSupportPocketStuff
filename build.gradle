@@ -16,6 +16,7 @@ buildscript {
 
 plugins {
 	id 'java'
+	id 'maven'
 }
 
 apply plugin: com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
