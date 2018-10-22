@@ -6,6 +6,7 @@ import org.apache.commons.lang3.Validate;
 import protocolsupport.api.Connection;
 import protocolsupport.libs.com.google.gson.JsonObject;
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
+import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.ArraySerializer;
 import protocolsupport.protocol.serializer.ItemStackSerializer;
 import protocolsupport.protocol.serializer.PositionSerializer;
@@ -83,10 +84,7 @@ public class SkullTilePacketListener extends Connection.PacketListener {
 	@Override
 	public void onRawPacketSending(RawPacketEvent event) {
 		ByteBuf data = event.getData();
-		int packetId = VarNumberSerializer.readVarInt(data);
-
-		data.readByte();
-		data.readByte();
+		int packetId = PEPacketDecoder.sReadPacketId(con.getVersion(), data);
 
 		if (packetId == PEPacketIDs.TILE_DATA_UPDATE) {
 			Position position = new Position(0, 0, 0);

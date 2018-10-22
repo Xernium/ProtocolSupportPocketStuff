@@ -14,6 +14,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
+import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.ItemStackSerializer;
 import protocolsupport.protocol.serializer.PositionSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
@@ -226,10 +227,8 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 	public void onRawPacketReceiving(RawPacketEvent event) {
 		ByteBuf data = event.getData();
 		
-		int packetId = VarNumberSerializer.readVarInt(data);
-		data.readByte();
-		data.readByte();
-		
+		int packetId = PEPacketDecoder.sReadPacketId(con.getVersion(), data);
+
 		Position position = new Position(0, 0, 0);
 
 		if (packetId == PEPacketIDs.PLAYER_ACTION) { // Used for when the player tries to hit a item frame when it doesn't have any item inside of it
@@ -313,10 +312,7 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 	public void onRawPacketSending(RawPacketEvent event) {
 		super.onRawPacketSending(event);
 		ByteBuf data = event.getData();
-		int packetId = VarNumberSerializer.readVarInt(data);
-
-		data.readByte();
-		data.readByte();
+		int packetId = PEPacketDecoder.sReadPacketId(con.getVersion(), data);
 
 		if (packetId == PEPacketIDs.UPDATE_BLOCK) {
 			Position position = new Position(0, 0, 0); 

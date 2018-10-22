@@ -3,6 +3,7 @@ package protocolsupportpocketstuff.util;
 import io.netty.buffer.ByteBuf;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolVersion;
+import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
@@ -69,11 +70,8 @@ public class ResourcePackListener extends Connection.PacketListener {
 	@Override
 	public void onRawPacketReceiving(RawPacketEvent event) {
 		super.onRawPacketReceiving(event);
-		ByteBuf buf = event.getData().copy();
-		int packetId = VarNumberSerializer.readVarInt(buf);
-
-		buf.readByte();
-		buf.readByte();
+		ByteBuf buf = event.getData();
+		int packetId = PEPacketDecoder.sReadPacketId(connection.getVersion(), buf);
 
 		if (packetId == PEPacketIDs.RESOURCE_RESPONSE) {
 			int status = buf.readByte();

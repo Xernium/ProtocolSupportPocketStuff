@@ -6,6 +6,7 @@ import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.SetPosition;
+import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
@@ -90,11 +91,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
     @Override
     public void onRawPacketSending(RawPacketEvent event) {
         ByteBuf data = event.getData();
-
-        int packetId = VarNumberSerializer.readVarInt(data);
-
-        data.readByte();
-        data.readByte();
+        int packetId = PEPacketDecoder.sReadPacketId(con.getVersion(), data);
 
         if (packetId == PEPacketIDs.MOVE_ENTITY_ABSOLUTE) {
             long entityId = VarNumberSerializer.readVarLong(data);

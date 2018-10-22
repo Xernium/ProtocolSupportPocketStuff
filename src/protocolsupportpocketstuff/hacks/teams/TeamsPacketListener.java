@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolVersion;
+import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
@@ -144,13 +145,11 @@ public class TeamsPacketListener extends Connection.PacketListener {
 		super.onRawPacketSending(event);
 
 		ByteBuf data = event.getData();
-		int packetId = VarNumberSerializer.readVarInt(data);
+		int packetId = PEPacketDecoder.sReadPacketId(con.getVersion(), data);
 
-		if (packetId != PEPacketIDs.SPAWN_PLAYER)
+		if (packetId != PEPacketIDs.SPAWN_PLAYER) {
 			return;
-
-		data.readByte();
-		data.readByte();
+		}
 
 		MiscSerializer.readUUID(data);
 		String name = StringSerializer.readString(data, con.getVersion());
