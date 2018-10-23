@@ -1,5 +1,6 @@
 package protocolsupportpocketstuff;
 
+import jdk.nashorn.internal.objects.annotations.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
@@ -33,6 +34,7 @@ import protocolsupportpocketstuff.resourcepacks.ResourcePackManager;
 import protocolsupportpocketstuff.skin.PcToPeProvider;
 import protocolsupportpocketstuff.skin.SkinListener;
 import protocolsupportpocketstuff.storage.Skins;
+import protocolsupportpocketstuff.util.ActionButton;
 import protocolsupportpocketstuff.util.ResourcePackListener;
 
 import java.io.File;
@@ -43,6 +45,12 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 	public static ServerPlatformIdentifier platform = ServerPlatformIdentifier.SPIGOT; // TODO: Add platform checker
 	public static ProtocolSupportPocketStuff getInstance() {
 		return INSTANCE;
+	}
+
+	private final ActionButton actionButton = new ActionButton();
+
+	public ActionButton getActionButton() {
+		return actionButton;
 	}
 
 	@Override

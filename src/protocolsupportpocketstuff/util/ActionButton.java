@@ -66,8 +66,8 @@ public class ActionButton implements Listener {
         changeText(player, value);
     }
 
-    private void changeText(Player player, String value) {
-        CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH + 1);
+    public void changeText(Player player, String value) {
+        CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.BUTTON_TEXT + 1);
         metadata.put(EntityMetadata.PeMetaBase.BUTTON_TEXT, new DataWatcherObjectString(value));
 
         EntityDataPacket packet = new EntityDataPacket(Integer.MAX_VALUE, metadata);
@@ -75,7 +75,7 @@ public class ActionButton implements Listener {
     }
 
     private void spawnEntity(Player player) {
-        CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH + 1);
+        CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.SCALE + 1);
         metadata.put(EntityMetadata.PeMetaBase.FLAGS, new DataWatcherObjectSVarLong(1 << 5));
         metadata.put(EntityMetadata.PeMetaBase.NAMETAG, new DataWatcherObjectString(""));
         metadata.put(EntityMetadata.PeMetaBase.SCALE, new DataWatcherObjectFloatLe(5));
