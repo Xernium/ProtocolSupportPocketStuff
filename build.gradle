@@ -149,10 +149,12 @@ shadowJar {
 	exclude 'META-INF/**'
 }
 
+compileJava {
+	dependsOn(clean)
+	dependsOn(updateLibs)
+	options.encoding = 'utf8'
+}
 
-compileJava.dependsOn(clean)
-compileJava.dependsOn(updateLibs)
-compileJava.finalizedBy(test)
 jar.enabled = false
 jar.finalizedBy(shadowJar)
 shadowJar.finalizedBy(copyFinalJarToTarget)
