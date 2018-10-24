@@ -7,6 +7,7 @@ import org.bukkit.util.Vector;
 
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolType;
+import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
 import protocolsupportpocketstuff.api.modals.Modal;
 import protocolsupportpocketstuff.api.modals.ModalType;
 import protocolsupportpocketstuff.api.modals.callback.ModalCallback;
@@ -27,7 +28,7 @@ public class PocketPlayer {
     //=====================================================\\
     //						Getting						   \\
     //=====================================================\\
-	
+
 	/***
 	 * Checks if the player is a pocket player.
 	 * @param player
@@ -36,7 +37,7 @@ public class PocketPlayer {
 	public static boolean isPocketPlayer(Player player) {
 		return ProtocolSupportAPI.getProtocolVersion(player).getProtocolType().equals(ProtocolType.PE);
 	}
-	
+
 	/***
 	 * Gets all pocket players on the server.
 	 * <br/><br/>
@@ -46,7 +47,7 @@ public class PocketPlayer {
 	public static Collection<? extends Player> getPocketPlayers() {
 		return Bukkit.getOnlinePlayers().stream().filter(pocketFilter()).collect(Collectors.toList());
 	}
-	
+
 	/***
 	 * Filter to filter PE players.
 	 * @return the truth is a predicate.
@@ -54,13 +55,13 @@ public class PocketPlayer {
 	public static Predicate<Player> pocketFilter() {
 		return p -> isPocketPlayer(p);
 	}
-	
+
     //=====================================================\\
     //						Packets						   \\
     //=====================================================\\
-	
+
 	/***
-	 * Sends a modal to a player and gets the callback id. 
+	 * Sends a modal to a player and gets the callback id.
 	 * <br/><br/>
 	 * <i>When sending multiple packets to pocket it is advised
 	 * first and then use {@link PocketCon} to send the packets.</i>
@@ -99,7 +100,7 @@ public class PocketPlayer {
     public static int sendModal(Player player, int modalId, ModalType modalType, String modalJSON, ModalCallback modalCallback) {
         return PocketCon.sendModal(ProtocolSupportAPI.getConnection(player), modalId, modalType, modalJSON, modalCallback);
 	}
-	
+
 	/***
 	 * Sends a PocketSkin to a pocket connection.
 	 * <br/><br/>
@@ -113,7 +114,7 @@ public class PocketPlayer {
 	public static void sendSkin(Player player, UUID uuid, byte[] skin, PocketSkinModel skinModel) {
 		PocketCon.sendSkin(ProtocolSupportAPI.getConnection(player), uuid, skin, skinModel);
 	}
-	
+
 	/***
 	 * Sends a dimension change to a pocket connection.
 	 * <br/><br/>
@@ -205,5 +206,27 @@ public class PocketPlayer {
 	public static void sendPocketPacket(Player player, PEPacket packet) {
 		PocketCon.sendPocketPacket(ProtocolSupportAPI.getConnection(player), packet);
 	}
-	
+
+	// ACTION BUTTON
+
+    public void sendButton(Player player, String buttonText, int displayTick, Runnable click) {
+        ProtocolSupportPocketStuff.getInstance().getActionButton().sendButton(player, buttonText, displayTick, click);
+    }
+
+    public void sendButton(Player player, String buttonText, Runnable click) {
+        ProtocolSupportPocketStuff.getInstance().getActionButton().sendButton(player, buttonText, click);
+    }
+
+    public boolean hasButton(Player player) {
+        return ProtocolSupportPocketStuff.getInstance().getActionButton().hasButton(player);
+    }
+
+    public void closeButton(Player player) {
+        ProtocolSupportPocketStuff.getInstance().getActionButton().closeButton(player);
+    }
+
+    public void changeButtonText(Player player, String value) {
+        ProtocolSupportPocketStuff.getInstance().getActionButton().changeText(player, value);
+    }
+
 }
