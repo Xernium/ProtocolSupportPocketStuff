@@ -9,6 +9,7 @@ import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.SetPosit
 import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
+import protocolsupport.protocol.typeremapper.pe.EntityFlags;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
 import protocolsupport.protocol.utils.datawatcher.ReadableDataWatcherObject;
@@ -16,7 +17,6 @@ import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectByte;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectFloatLe;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectItemStack;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectPosition;
-import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectSVarLong;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectString;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectVarInt;
 import protocolsupport.protocol.utils.i18n.I18NData;
@@ -107,8 +107,8 @@ public class HologramsPacketListener extends Connection.PacketListener {
                 int headYaw = data.readByte();
                 int yaw = data.readByte();
                 boolean onGround = data.readBoolean();
-                event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
-            } else {
+                event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_TELEPORT, onGround).encode(con));
+            } else {// 1.5 updated entity move packet
                 byte flag = data.readByte();
                 boolean onGround = (flag & 128) == 128;
                 float x = data.readFloatLE();
@@ -117,7 +117,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
                 int pitch = data.readByte();
                 int headYaw = data.readByte();
                 int yaw = data.readByte();
-                event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
+                event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_TELEPORT, onGround).encode(con));
             }
             return;
         }
@@ -240,8 +240,8 @@ public class HologramsPacketListener extends Connection.PacketListener {
             if (metaKey == 0) {
                 long peBaseFlags = ((Number) dw.getValue()).longValue();
 //                System.out.println("!!! meta ctx " + Long.toBinaryString(peBaseFlags));
-                invisible = ((peBaseFlags >> (EntityMetadata.PeMetaBase.FLAG_INVISIBLE - 1)) & 1) == 1;
-                shownametag = ((peBaseFlags >> (EntityMetadata.PeMetaBase.FLAG_SHOW_NAMETAG - 1)) & 1) == 1;
+                invisible = ((peBaseFlags >> (EntityFlags.V1_6.INVISIBLE - 1)) & 1) == 1;
+                shownametag = ((peBaseFlags >> (EntityFlags.V1_6.CAN_SHOW_NAME - 1)) & 1) == 1;
 //                System.out.println(String.format("!!! invisible=%s shownametag=%s", invisible, shownametag));
             }
         }
@@ -267,7 +267,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
             spawned = true;
 
             CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH + 1);
-            long peBaseFlags = entity.getDataCache().getPeBaseFlags();
+//            long peBaseFlags = entity.getDataCache().getPeBaseFlags();
 //            System.out.println("!!! sent new meta ctx " + Long.toBinaryString(peBaseFlags));
 //            metadata.put(EntityMetadata.PeMetaBase.FLAGS, new DataWatcherObjectSVarLong(peBaseFlags));
             metadata.put(EntityMetadata.PeMetaBase.NAMETAG, new DataWatcherObjectString(nametag));

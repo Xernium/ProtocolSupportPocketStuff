@@ -46,7 +46,7 @@ public class PlayerMovePacket extends PEPacket {
 		serializer.writeFloatLE(yaw); //head yaw actually
 		serializer.writeByte(mode);
 		serializer.writeBoolean(onGround); //on ground
-		VarNumberSerializer.writeVarLong(serializer, 0);
+		VarNumberSerializer.writeVarLong(serializer, -1);// Fix riding runtime id
 	}
 
 	@Override

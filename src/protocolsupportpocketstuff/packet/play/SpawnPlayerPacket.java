@@ -57,8 +57,10 @@ public class SpawnPlayerPacket extends PEPacket {
 	public void toData(Connection connection, ByteBuf serializer) {
 		MiscSerializer.writeUUID(serializer, connection.getVersion(), uuid);
 		StringSerializer.writeString(serializer, connection.getVersion(), name);
-		StringSerializer.writeString(serializer, ProtocolVersion.MINECRAFT_PE, "");// third party name
-		VarNumberSerializer.writeSVarInt(serializer, 0);// platform id
+		if (connection.getVersion().isBefore(ProtocolVersion.MINECRAFT_PE_1_7)) {
+			StringSerializer.writeString(serializer, ProtocolVersion.MINECRAFT_PE, "");// third party name
+			VarNumberSerializer.writeSVarInt(serializer, 0);// platform id
+		}
 
 		VarNumberSerializer.writeSVarLong(serializer, entityId); // entity ID
 		VarNumberSerializer.writeVarLong(serializer, entityId); // runtime ID
