@@ -4,12 +4,13 @@ import io.netty.buffer.ByteBuf;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
-import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
+import protocolsupport.protocol.typeremapper.pe.PEDataValues;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
 import protocolsupport.protocol.utils.i18n.I18NData;
+import protocolsupport.protocol.utils.types.networkentity.NetworkEntityType;
 import protocolsupport.utils.CollectionsUtils;
 import protocolsupportpocketstuff.packet.PEPacket;
 
@@ -17,7 +18,7 @@ import java.util.List;
 
 public class SpawnEntityPacket extends PEPacket {
 	private long entityId;
-	private int entityType;
+	private NetworkEntityType entityType;
 	private float x;
 	private float y;
 	private float z;
@@ -29,7 +30,7 @@ public class SpawnEntityPacket extends PEPacket {
 	private List<SetAttributesPacket.Attribute> attributes;
 	private CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata;
 
-	public SpawnEntityPacket(long entityId, int entityType, float x, float y, float z, float motionX, float motionY, float motionZ, float pitch, float yaw, List<SetAttributesPacket.Attribute> attributes, CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata) {
+	public SpawnEntityPacket(long entityId, NetworkEntityType entityType, float x, float y, float z, float motionX, float motionY, float motionZ, float pitch, float yaw, List<SetAttributesPacket.Attribute> attributes, CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata) {
 		this.entityId = entityId;
 		this.entityType = entityType;
 		this.x = x;
@@ -53,7 +54,11 @@ public class SpawnEntityPacket extends PEPacket {
 	public void toData(Connection connection, ByteBuf serializer) {
 		VarNumberSerializer.writeSVarLong(serializer, entityId); // entity ID
 		VarNumberSerializer.writeVarLong(serializer, entityId); // runtime ID
-		VarNumberSerializer.writeVarInt(serializer, entityType); // boss bar entity id
+		if (connection.getVersion().isAfter(ProtocolVersion.MINECRAFT_PE_1_7)) {
+			StringSerializer.writeString(serializer, connection.getVersion(), entityType.getPEKey());
+		} else {
+			VarNumberSerializer.writeVarInt(serializer, PEDataValues.getEntityTypeId(entityType)); // boss bar entity id
+		}
 		serializer.writeFloatLE(x); // x
 		serializer.writeFloatLE(y); // y
 		serializer.writeFloatLE(z); // z

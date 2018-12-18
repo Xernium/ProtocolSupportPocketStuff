@@ -26,6 +26,7 @@ import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectFloat
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectSVarLong;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectString;
 import protocolsupport.protocol.utils.types.networkentity.NetworkEntity;
+import protocolsupport.protocol.utils.types.networkentity.NetworkEntityType;
 import protocolsupport.utils.CollectionsUtils;
 import protocolsupport.utils.netty.Allocator;
 import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
@@ -110,7 +111,7 @@ public class ActionButton implements Listener {
 
         Location location = player.getLocation();
 
-        SpawnEntityPacket packet = new SpawnEntityPacket(BUTTON.getId(), 37,
+        SpawnEntityPacket packet = new SpawnEntityPacket(BUTTON.getId(), NetworkEntityType.SLIME,
                 (float) location.getX(), (float) location.getY() + 1, (float) location.getZ(),
                 0F, 0F, 0F,
                 location.getPitch(), location.getYaw(), ImmutableList.of(),

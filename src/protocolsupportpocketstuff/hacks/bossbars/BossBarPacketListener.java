@@ -7,6 +7,7 @@ import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMe
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectFloatLe;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectString;
+import protocolsupport.protocol.utils.types.networkentity.NetworkEntityType;
 import protocolsupport.utils.CollectionsUtils;
 import protocolsupportpocketstuff.api.util.PocketCon;
 import protocolsupportpocketstuff.packet.play.BossEventPacket;
@@ -32,9 +33,6 @@ public class BossBarPacketListener extends Connection.PacketListener {
 	private static Field BOSS_ACTION;
 	private static Field BOSS_TITLE;
 	private static Field BOSS_HEALTH;
-
-	// Constants
-	private static final int BOSS_BAR_ENTITY_ID = 12; // Pig
 
 	static {
 		try {
@@ -136,7 +134,7 @@ public class BossBarPacketListener extends Connection.PacketListener {
 
 			SpawnEntityPacket packet = new SpawnEntityPacket(
 					unique,
-					BOSS_BAR_ENTITY_ID,
+					NetworkEntityType.PIG,
 					0, -10, 0, // coordinates
 					0, 0, 0, // motion
 					0, 0, // pitch & yaw
