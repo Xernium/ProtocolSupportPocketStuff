@@ -46,7 +46,6 @@ public class SkinPacket extends PEPacket {
 
 	@Override
 	public void toData(Connection connection, ByteBuf serializer) {
-		System.out.println("!!! skin packet");
 		ProtocolVersion version = connection.getVersion();
 		MiscSerializer.writeUUID(serializer, version, uuid);
 		StringSerializer.writeString(serializer, version, skinId);

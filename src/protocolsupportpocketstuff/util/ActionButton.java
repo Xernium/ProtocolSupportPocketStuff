@@ -17,7 +17,7 @@ import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.packet.middleimpl.ClientBoundPacketData;
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
-import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe_1_5.EntityMoveAbsolute;
+import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityTeleport;
 import protocolsupport.protocol.pipeline.version.v_pe.PEPacketEncoder;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
@@ -128,7 +128,7 @@ public class ActionButton implements Listener {
             Location location = player.getLocation();
 
             @Cleanup
-            ClientBoundPacketData data = EntityMoveAbsolute.create(ProtocolVersion.MINECRAFT_PE_1_5, BUTTON, location.getX(), location.getY(), location.getZ(), Byte.MAX_VALUE, Byte.MAX_VALUE, Byte.MAX_VALUE, false, false);
+            ClientBoundPacketData data = EntityTeleport.create(ProtocolVersion.MINECRAFT_PE_1_5, BUTTON, location.getX(), location.getY(), location.getZ(), Byte.MAX_VALUE, Byte.MAX_VALUE, Byte.MAX_VALUE, false, false);
             @Cleanup("release")
             ByteBuf buf = Allocator.allocateBuffer();
             PEPacketEncoder.sWritePacketId(ProtocolSupportAPI.getProtocolVersion(player), buf, PEPacketIDs.MOVE_ENTITY_ABSOLUTE);

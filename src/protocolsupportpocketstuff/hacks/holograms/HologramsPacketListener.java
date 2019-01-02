@@ -8,6 +8,7 @@ import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMe
 import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.SetPosition;
 import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.StringSerializer;
+import protocolsupport.protocol.serializer.VarInt;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.EntityFlags;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
@@ -91,45 +92,44 @@ public class HologramsPacketListener extends Connection.PacketListener {
     @Override
     public void onRawPacketSending(RawPacketEvent event) {
         ByteBuf data = event.getData();
-        int packetId = PEPacketDecoder.sReadPacketId(con.getVersion(), data);
+        ProtocolVersion version = con.getVersion();
+        int packetId = PEPacketDecoder.sReadPacketId(version, data);
 
         if (packetId == PEPacketIDs.MOVE_ENTITY_ABSOLUTE) {
-            long entityId = VarNumberSerializer.readVarLong(data);
+            long entityId = VarInt.readUnsignedVarLong(data);
 
             if (!cachedArmorStands.containsKey(entityId))
                 return;
 
-            if (con.getVersion() == ProtocolVersion.MINECRAFT_PE) {
-                float x = data.readFloatLE();
-                float y = data.readFloatLE() + (float) Y_OFFSET;
-                float z = data.readFloatLE();
-                int pitch = data.readByte();
-                int headYaw = data.readByte();
-                int yaw = data.readByte();
-                boolean onGround = data.readBoolean();
-                event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_TELEPORT, onGround).encode(con));
-            } else {// 1.5 updated entity move packet
-                byte flag = data.readByte();
-                boolean onGround = (flag & 128) == 128;
-                float x = data.readFloatLE();
-                float y = data.readFloatLE() + (float) Y_OFFSET;
-                float z = data.readFloatLE();
-                int pitch = data.readByte();
-                int headYaw = data.readByte();
-                int yaw = data.readByte();
-                event.setData(new PlayerMovePacket(entityId, x, y, z, pitch, headYaw, yaw, SetPosition.ANIMATION_MODE_TELEPORT, onGround).encode(con));
-            }
+            CachedArmorStand armorStand = cachedArmorStands.get(entityId);
+
+            byte flag = data.readByte();
+            boolean onGround = (flag & 128) == 128;
+            boolean teleported = (flag & 64) == 64;
+            armorStand.x = data.readFloatLE();
+            armorStand.y = data.readFloatLE() + (float) Y_OFFSET;
+            armorStand.z = data.readFloatLE();
+            int pitch = data.readByte();
+            int yaw = data.readByte();
+            int headYaw = data.readByte();
+            event.setData(new PlayerMovePacket(entityId, armorStand.x, armorStand.y, armorStand.z, pitch, headYaw, yaw, teleported ? SetPosition.ANIMATION_MODE_TELEPORT : SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
+
             return;
         }
         if (packetId == PEPacketIDs.SPAWN_ENTITY) {
             VarNumberSerializer.readSVarLong(data);// unique id
             long entityId = VarNumberSerializer.readVarLong(data); // runtime id
-            int typeId = VarNumberSerializer.readVarInt(data);
+            if (version.isBefore(ProtocolVersion.MINECRAFT_PE_1_8)) {
+                int typeId = VarNumberSerializer.readVarInt(data);
+                if (typeId != ARMOR_STAND_ID)
+                    return;
+            } else {
+                String entityType = StringSerializer.readString(data, version);
+                if (!entityType.equals("minecraft:armor_stand"))
+                    return;
+            }
 
             if (cachedArmorStands.containsKey(entityId))
-                return;
-
-            if (typeId != ARMOR_STAND_ID)
                 return;
 
             float x = data.readFloatLE();
@@ -142,22 +142,15 @@ public class HologramsPacketListener extends Connection.PacketListener {
 
             data.readFloatLE(); // pitch
             data.readFloatLE(); // yaw
-            if (con.getVersion().getId() > ProtocolVersion.MINECRAFT_PE.getId()) {
-                data.readFloatLE();// head yaw
-            }
+            data.readFloatLE();// head yaw
 
-            {
-                int len = VarNumberSerializer.readVarInt(data);// attribute length, unused
-                for (int i = 0; i < len; i++) {
-                    StringSerializer.readString(data, ProtocolVersion.MINECRAFT_PE);
-                    data.readFloatLE();
-                    data.readFloatLE();
-                    data.readFloatLE();
-                }
+            int len = VarNumberSerializer.readVarInt(data);// attribute length, unused
+            for (int i = 0; i < len; i++) {
+                StringSerializer.readString(data, ProtocolVersion.MINECRAFT_PE);
+                data.readFloatLE();
+                data.readFloatLE();
+                data.readFloatLE();
             }
-
-            CachedArmorStand armorStand = new CachedArmorStand(x, y, z);
-            cachedArmorStands.put(entityId, armorStand);
 
             String hologramName = retriveHologramName(data);
 
@@ -165,6 +158,9 @@ public class HologramsPacketListener extends Connection.PacketListener {
                 return;
 
             event.setCancelled(true);
+
+            CachedArmorStand armorStand = new CachedArmorStand(x, y, z);
+            cachedArmorStands.put(entityId, armorStand);
 
             armorStand.nametag = hologramName;
             armorStand.setHologram(true);
@@ -207,11 +203,10 @@ public class HologramsPacketListener extends Connection.PacketListener {
         if (packetId == PEPacketIDs.ENTITY_DESTROY) {
             long entityId = VarNumberSerializer.readSVarLong(data);
             cachedArmorStands.remove(entityId);
-            return;
         }
     }
 
-    public String retriveHologramName(ByteBuf data) {
+    private String retriveHologramName(ByteBuf data) {
         boolean hasCustomName = false;
         boolean invisible = false;
         boolean shownametag = false;
@@ -253,19 +248,16 @@ public class HologramsPacketListener extends Connection.PacketListener {
         private float x;
         private float y;
         private float z;
-        private boolean spawned = false;
         private String nametag;
-        private boolean hologram = false;
+        private boolean hologram;
 
-        public CachedArmorStand(float x, float y, float z) {
+        CachedArmorStand(float x, float y, float z) {
             this.x = x;
             this.y = y;
             this.z = z;
         }
 
         public void spawnHologram(NetworkEntity entity, HologramsPacketListener listener) {
-            spawned = true;
-
             CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH + 1);
 //            long peBaseFlags = entity.getDataCache().getPeBaseFlags();
 //            System.out.println("!!! sent new meta ctx " + Long.toBinaryString(peBaseFlags));
