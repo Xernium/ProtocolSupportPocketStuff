@@ -152,6 +152,9 @@ public class HologramsPacketListener extends Connection.PacketListener {
                 data.readFloatLE();
             }
 
+            CachedArmorStand armorStand = new CachedArmorStand(x, y, z);
+            cachedArmorStands.put(entityId, armorStand);
+
             String hologramName = retriveHologramName(data);
 
             if (hologramName == null)
@@ -159,14 +162,11 @@ public class HologramsPacketListener extends Connection.PacketListener {
 
             event.setCancelled(true);
 
-            CachedArmorStand armorStand = new CachedArmorStand(x, y, z);
-            cachedArmorStands.put(entityId, armorStand);
-
             armorStand.nametag = hologramName;
             armorStand.setHologram(true);
 
             // omg it is an hologram :O
-            armorStand.spawnHologram(con.getNetworkDataCache().getWatchedEntity((int) entityId), this);
+            armorStand.spawnHologram(entityId, this);
             return;
         }
         if (packetId == PEPacketIDs.SET_ENTITY_DATA) {
@@ -185,19 +185,13 @@ public class HologramsPacketListener extends Connection.PacketListener {
 
             armorStand.setHologram(true);
 
-//            if (armorStand.spawned)
-//                return;
-
             // Kill current armor stand
             event.setData(new EntityDestroyPacket(entityId).encode(con));
 
             armorStand.nametag = hologramName;
             armorStand.setHologram(true);
 
-            cachedArmorStands.put(entityId, armorStand);
-
-
-            armorStand.spawnHologram(con.getNetworkDataCache().getWatchedEntity((int) entityId), this);
+            armorStand.spawnHologram(entityId, this);
             return;
         }
         if (packetId == PEPacketIDs.ENTITY_DESTROY) {
@@ -257,7 +251,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
             this.z = z;
         }
 
-        public void spawnHologram(NetworkEntity entity, HologramsPacketListener listener) {
+        public void spawnHologram(long entityId, HologramsPacketListener listener) {
             CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH + 1);
 //            long peBaseFlags = entity.getDataCache().getPeBaseFlags();
 //            System.out.println("!!! sent new meta ctx " + Long.toBinaryString(peBaseFlags));
@@ -270,7 +264,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
             SpawnPlayerPacket packet = new SpawnPlayerPacket(
                     UUID.randomUUID(),
                     nametag,
-                    entity.getId(),
+                    entityId,
                     x, y, z, // coordinates
                     0, 0, 0, // motion
                     0, 0, 0, // pitch, head yaw & yaw
