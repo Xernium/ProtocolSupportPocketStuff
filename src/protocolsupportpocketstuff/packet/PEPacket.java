@@ -8,6 +8,7 @@ import protocolsupport.api.Connection.PacketListener;
 import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.pipeline.version.v_pe.PEPacketEncoder;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
+import protocolsupport.utils.netty.Allocator;
 import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
 
 public abstract class PEPacket {
@@ -19,7 +20,7 @@ public abstract class PEPacket {
 	public abstract void readFromClientData(Connection connection, ByteBuf clientdata);
 		
 	public ByteBuf encode(Connection connection) {
-		ByteBuf serializer = Unpooled.buffer();
+		ByteBuf serializer = Allocator.allocateBuffer();
 		PEPacketEncoder.sWritePacketId(connection.getVersion(), serializer, getPacketId());
 		toData(connection, serializer);
 		return serializer;

@@ -10,7 +10,7 @@ import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarInt;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
-import protocolsupport.protocol.typeremapper.pe.EntityFlags;
+import protocolsupport.protocol.typeremapper.pe.PEMetadataFlags;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
 import protocolsupport.protocol.utils.datawatcher.ReadableDataWatcherObject;
@@ -209,6 +209,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
         String nametag = null;
 
         int length = VarNumberSerializer.readVarInt(data);
+        ProtocolVersion version = con.getVersion();
 
         for (int idx = 0; length > idx; idx++) {
             int metaKey = VarNumberSerializer.readVarInt(data);
@@ -219,7 +220,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
 
             ReadableDataWatcherObject<?> dw = DATA_WATCHERS.get(metaType);
 
-            dw.readFromStream(data, con.getVersion(), I18NData.DEFAULT_LOCALE);
+            dw.readFromStream(data, version, I18NData.DEFAULT_LOCALE);
 
             if (metaKey == 4) {
                 nametag = (String) dw.getValue();
@@ -229,8 +230,8 @@ public class HologramsPacketListener extends Connection.PacketListener {
             if (metaKey == 0) {
                 long peBaseFlags = ((Number) dw.getValue()).longValue();
 //                System.out.println("!!! meta ctx " + Long.toBinaryString(peBaseFlags));
-                invisible = ((peBaseFlags >> (EntityFlags.V1_6.INVISIBLE - 1)) & 1) == 1;
-                shownametag = ((peBaseFlags >> (EntityFlags.V1_6.CAN_SHOW_NAME - 1)) & 1) == 1;
+                invisible = ((peBaseFlags >> (PEMetadataFlags.INVISIBLE.getFlag(version) - 1)) & 1) == 1;
+                shownametag = ((peBaseFlags >> (PEMetadataFlags.CAN_SHOW_NAME.getFlag(version) - 1)) & 1) == 1;
 //                System.out.println(String.format("!!! invisible=%s shownametag=%s", invisible, shownametag));
             }
         }

@@ -49,7 +49,7 @@ public class PocketCon {
 	public static boolean isPocketConnection(Connection connection) {
 		return connection.getVersion().getProtocolType().equals(ProtocolType.PE);
 	}
-	
+
 	/**
 	 * Gets all pocket connections on the server.
 	 * @return all pocket connections.
@@ -57,7 +57,7 @@ public class PocketCon {
 	public static Collection<? extends Connection> getPocketConnections() {
 		return ProtocolSupportAPI.getConnections().stream().filter(pocketFilter()).collect(Collectors.toList());
 	}
-	
+
 	/***
 	 * Filter to filter PE connections.
 	 * @return the truth is a predicate.
@@ -65,11 +65,11 @@ public class PocketCon {
 	public static Predicate<Connection> pocketFilter() {
 		return c -> isPocketConnection(c);
 	}
-	
+
     //=====================================================\\
     //						Packets						   \\
     //=====================================================\\
-	
+
 	/***
 	 * Sends a modal and gets the corresponding id.
 	 * @param modal
@@ -178,7 +178,7 @@ public class PocketCon {
 		//TODO: "Steve" is actually a hack. The name send should be the previous skin name. Not sure if this matters though. Works for now :S"
 		sendPocketPacket(connection, new SkinPacket(uuid, skinModel.getSkinId(), skinModel.getSkinName(), "Steve", skin, new byte[0], skinModel.getGeometryId(), skinModel.getGeometryData()));
 	}
-	
+
 	/***
 	 * Sends a dimension change to a pocket connection.
 	 * @param connection
@@ -263,7 +263,7 @@ public class PocketCon {
 	 * @param packet
 	 */
 	public static void sendPocketPacket(Connection connection, PEPacket packet) {
-		connection.sendRawPacket(MiscSerializer.readAllBytes(packet.encode(connection)));
-	}
-	
+        connection.sendRawPacket(packet.encode(connection));
+    }
+
 }

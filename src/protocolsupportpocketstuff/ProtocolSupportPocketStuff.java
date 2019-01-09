@@ -1,6 +1,5 @@
 package protocolsupportpocketstuff;
 
-import jdk.nashorn.internal.objects.annotations.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
@@ -14,7 +13,6 @@ import protocolsupport.api.ProtocolVersion;
 import protocolsupport.api.ServerPlatformIdentifier;
 import protocolsupport.api.events.ConnectionHandshakeEvent;
 import protocolsupport.api.events.ConnectionOpenEvent;
-import protocolsupport.api.unsafe.pemetadata.PEMetaProviderSPI;
 import protocolsupport.api.unsafe.peskins.PESkinsProviderSPI;
 import protocolsupportpocketstuff.api.PocketStuffAPI;
 import protocolsupportpocketstuff.api.util.PocketCon;
@@ -24,7 +22,6 @@ import protocolsupportpocketstuff.hacks.holograms.HologramsPacketListener;
 import protocolsupportpocketstuff.hacks.itemframes.ItemFramesPacketListener;
 import protocolsupportpocketstuff.hacks.skulls.SkullTilePacketListener;
 import protocolsupportpocketstuff.hacks.teams.TeamsPacketListener;
-import protocolsupportpocketstuff.metadata.MetadataProvider;
 import protocolsupportpocketstuff.packet.handshake.ClientLoginPacket;
 import protocolsupportpocketstuff.packet.play.BlockPickRequestPacket;
 import protocolsupportpocketstuff.packet.play.ModalResponsePacket;
