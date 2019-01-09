@@ -263,7 +263,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
 			metadata.put(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH, new DataWatcherObjectFloatLe(0.001f)); // bb height
 
             SpawnPlayerPacket packet = new SpawnPlayerPacket(
-                    UUID.randomUUID(),
+                    new UUID(0x80, entityId),
                     nametag,
                     entityId,
                     x, y, z, // coordinates
