@@ -122,28 +122,28 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 		}
 	}
 
-	@EventHandler
-	public void onWorld(PlayerChangedWorldEvent event) { // Magic code to compatible bungee transport
-		Connection conn = ProtocolSupportAPI.getConnection(event.getPlayer());
-		if (conn.getVersion() != ProtocolVersion.MINECRAFT_PE) {
-			return;
-		}
-
-		HologramsPacketListener hologram = HologramsPacketListener.get(conn);
-		if (hologram != null) {
-			hologram.clean();
-		}
-
-		SkullTilePacketListener skull = SkullTilePacketListener.get(conn);
-		if (skull != null) {
-			skull.clean();
-		}
-
-		ItemFramesPacketListener frame = (ItemFramesPacketListener) conn.getMetadata(ItemFramesPacketListener.META_KEY);
-		if (frame != null) {
-			frame.clean();
-		}
-	}
+//	@EventHandler
+//	public void onWorld(PlayerChangedWorldEvent event) { // Magic code to compatible bungee transport
+//		Connection conn = ProtocolSupportAPI.getConnection(event.getPlayer());
+//		if (conn.getVersion() != ProtocolVersion.MINECRAFT_PE) {
+//			return;
+//		}
+//
+//		HologramsPacketListener hologram = HologramsPacketListener.get(conn);
+//		if (hologram != null) {
+//			hologram.clean();
+//		}
+//
+//		SkullTilePacketListener skull = SkullTilePacketListener.get(conn);
+//		if (skull != null) {
+//			skull.clean();
+//		}
+//
+//		ItemFramesPacketListener frame = (ItemFramesPacketListener) conn.getMetadata(ItemFramesPacketListener.META_KEY);
+//		if (frame != null) {
+//			frame.clean();
+//		}
+//	}
 
 	@Override
 	public void onDisable() {
