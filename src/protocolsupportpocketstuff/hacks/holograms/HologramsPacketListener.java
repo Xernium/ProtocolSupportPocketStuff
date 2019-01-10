@@ -21,7 +21,6 @@ import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectPosit
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectString;
 import protocolsupport.protocol.utils.datawatcher.objects.DataWatcherObjectVarInt;
 import protocolsupport.protocol.utils.i18n.I18NData;
-import protocolsupport.protocol.utils.types.networkentity.NetworkEntity;
 import protocolsupport.utils.CollectionsUtils;
 import protocolsupportpocketstuff.api.util.PocketCon;
 import protocolsupportpocketstuff.packet.play.EntityDestroyPacket;
@@ -155,7 +154,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
             CachedArmorStand armorStand = new CachedArmorStand(x, y, z);
             cachedArmorStands.put(entityId, armorStand);
 
-            String hologramName = retriveHologramName(data);
+            String hologramName = retrieveHologramName(data);
 
             if (hologramName == null)
                 return;
@@ -175,7 +174,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
             if (!cachedArmorStands.containsKey(entityId))
                 return;
 
-            String hologramName = retriveHologramName(data);
+            String hologramName = retrieveHologramName(data);
 
             if (hologramName == null)
                 return;
@@ -200,7 +199,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
         }
     }
 
-    private String retriveHologramName(ByteBuf data) {
+    private String retrieveHologramName(ByteBuf data) {
         boolean hasCustomName = false;
         boolean invisible = false;
         boolean shownametag = false;
@@ -225,6 +224,9 @@ public class HologramsPacketListener extends Connection.PacketListener {
             if (metaKey == 4) {
                 nametag = (String) dw.getValue();
                 hasCustomName = !nametag.isEmpty();
+                if (nametag.equals("__null")) {
+                    nametag = "";
+                }
             }
 
             if (metaKey == 0) {
