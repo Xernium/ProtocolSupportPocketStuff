@@ -31,8 +31,6 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class HologramsPacketListener extends Connection.PacketListener {
-    private Connection con;
-    private HashMap<Long, CachedArmorStand> cachedArmorStands = new HashMap<>();
     private static final HashMap<Integer, ReadableDataWatcherObject<?>> DATA_WATCHERS = new HashMap<>();
     private static final int ARMOR_STAND_ID = 61;
     private static final double Y_OFFSET = 1.6200000047683716D;
@@ -73,19 +71,11 @@ public class HologramsPacketListener extends Connection.PacketListener {
         DATA_WATCHERS.put(8, new DataWatcherObjectPosition());
     }
 
-    public static final String META_KEY = "__HOLOGRAM_PACKET_LISTENER";
+    private Connection con;
+    private HashMap<Long, CachedArmorStand> cachedArmorStands = new HashMap<>();
 
     public HologramsPacketListener(Connection con) {
         this.con = con;
-        con.addMetadata(META_KEY, this);
-    }
-
-    public static HologramsPacketListener get(Connection con) {
-        return (HologramsPacketListener) con.getMetadata(META_KEY);
-    }
-
-    public void clean() {
-        cachedArmorStands.clear();
     }
 
     @Override
@@ -108,11 +98,12 @@ public class HologramsPacketListener extends Connection.PacketListener {
             armorStand.x = data.readFloatLE();
             armorStand.y = data.readFloatLE() + (float) Y_OFFSET;
             armorStand.z = data.readFloatLE();
-            int pitch = data.readByte();
-            int yaw = data.readByte();
-            int headYaw = data.readByte();
-            event.setData(new PlayerMovePacket(entityId, armorStand.x, armorStand.y, armorStand.z, pitch, headYaw, yaw, teleported ? SetPosition.ANIMATION_MODE_TELEPORT : SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
-
+            if (armorStand.isHologram()) {
+                int pitch = data.readByte();
+                int yaw = data.readByte();
+                int headYaw = data.readByte();
+                event.setData(new PlayerMovePacket(armorStand.getEntityId(), armorStand.x, armorStand.y, armorStand.z, pitch, headYaw, yaw, teleported ? SetPosition.ANIMATION_MODE_TELEPORT : SetPosition.ANIMATION_MODE_ALL, onGround).encode(con));
+            }
             return;
         }
         if (packetId == PEPacketIDs.SPAWN_ENTITY) {
@@ -151,7 +142,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
                 data.readFloatLE();
             }
 
-            CachedArmorStand armorStand = new CachedArmorStand(x, y, z);
+            CachedArmorStand armorStand = new CachedArmorStand(getHologramId(entityId), x, y, z);
             cachedArmorStands.put(entityId, armorStand);
 
             String hologramName = retrieveHologramName(data);
@@ -182,10 +173,11 @@ public class HologramsPacketListener extends Connection.PacketListener {
             // omg it is an hologram :O
             CachedArmorStand armorStand = cachedArmorStands.get(entityId);
 
-            armorStand.setHologram(true);
-
-            // Kill current armor stand
-            event.setData(new EntityDestroyPacket(entityId).encode(con));
+            if (armorStand.isHologram()) {
+                event.setData(new EntityDestroyPacket(armorStand.getEntityId()).encode(con));
+            } else {
+                event.setData(new EntityDestroyPacket(entityId).encode(con));
+            }
 
             armorStand.nametag = hologramName;
             armorStand.setHologram(true);
@@ -195,7 +187,10 @@ public class HologramsPacketListener extends Connection.PacketListener {
         }
         if (packetId == PEPacketIDs.ENTITY_DESTROY) {
             long entityId = VarNumberSerializer.readSVarLong(data);
-            cachedArmorStands.remove(entityId);
+            CachedArmorStand stand = cachedArmorStands.remove(entityId);
+            if (stand != null && stand.isHologram()) {
+                event.setData(new EntityDestroyPacket(stand.getEntityId()).encode(con));
+            }
         }
     }
 
@@ -241,20 +236,29 @@ public class HologramsPacketListener extends Connection.PacketListener {
         return hasCustomName && invisible && shownametag ? nametag : null;
     }
 
+    public static long getHologramId(long entityId) {
+        if (Long.compareUnsigned(entityId, Integer.MAX_VALUE) == -1) {
+            return entityId + Integer.MAX_VALUE;
+        }
+        return entityId;
+    }
+
     static class CachedArmorStand {
+        private long entityId;
         private float x;
         private float y;
         private float z;
         private String nametag;
         private boolean hologram;
 
-        CachedArmorStand(float x, float y, float z) {
+        CachedArmorStand(long entityId, float x, float y, float z) {
+            this.entityId = entityId;
             this.x = x;
             this.y = y;
             this.z = z;
         }
 
-        public void spawnHologram(long entityId, HologramsPacketListener listener) {
+        public void spawnHologram(long originId, HologramsPacketListener listener) {
             CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH + 1);
 //            long peBaseFlags = entity.getDataCache().getPeBaseFlags();
 //            System.out.println("!!! sent new meta ctx " + Long.toBinaryString(peBaseFlags));
@@ -265,7 +269,7 @@ public class HologramsPacketListener extends Connection.PacketListener {
 			metadata.put(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH, new DataWatcherObjectFloatLe(0.001f)); // bb height
 
             SpawnPlayerPacket packet = new SpawnPlayerPacket(
-                    new UUID(0x80, entityId),
+                    new UUID(0x80, originId),
                     nametag,
                     entityId,
                     x, y, z, // coordinates
@@ -275,6 +279,10 @@ public class HologramsPacketListener extends Connection.PacketListener {
             );
 
             PocketCon.sendPocketPacket(listener.con, packet);
+        }
+
+        public long getEntityId() {
+            return entityId;
         }
 
         public boolean isHologram() {
