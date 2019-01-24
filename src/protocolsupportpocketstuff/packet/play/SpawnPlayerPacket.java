@@ -48,6 +48,15 @@ public class SpawnPlayerPacket extends PEPacket {
 		this.metadata = metadata;
 	}
 
+	public SpawnPlayerPacket(UUID uuid, String name, long entityId, float x, float y, float z) {
+		this.uuid = uuid;
+		this.name = name;
+		this.entityId = entityId;
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+
 	@Override
 	public int getPacketId() {
 		return PEPacketIDs.SPAWN_PLAYER;
@@ -78,8 +87,11 @@ public class SpawnPlayerPacket extends PEPacket {
 
 		VarNumberSerializer.writeSVarInt(serializer, 0); //held itemstack (it is actually a slot, but we only send null itemstack here, so we only write 0 id)
 
-		EntityMetadata.write(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
-
+		if (metadata == null) {
+			VarNumberSerializer.writeVarInt(serializer, 0);
+		} else {
+			EntityMetadata.write(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
+		}
 		//adventure settings
 		VarNumberSerializer.writeVarInt(serializer, 0);
 		VarNumberSerializer.writeVarInt(serializer, 0);
