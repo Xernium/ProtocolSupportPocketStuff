@@ -1,15 +1,14 @@
 package protocolsupportpocketstuff;
 
+import com.google.common.collect.Maps;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import protocolsupport.api.Connection;
-import protocolsupport.api.ProtocolSupportAPI;
-import protocolsupport.api.ProtocolVersion;
 import protocolsupport.api.ServerPlatformIdentifier;
 import protocolsupport.api.events.ConnectionHandshakeEvent;
 import protocolsupport.api.events.ConnectionOpenEvent;
@@ -35,6 +34,8 @@ import protocolsupportpocketstuff.util.ActionButton;
 import protocolsupportpocketstuff.util.ResourcePackListener;
 
 import java.io.File;
+import java.util.Map;
+import java.util.function.Consumer;
 
 public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 	public static final String PREFIX = "[" + ChatColor.DARK_PURPLE + "PSPS" + ChatColor.RESET + "] ";
@@ -48,6 +49,16 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 
 	public ActionButton getActionButton() {
 		return actionButton;
+	}
+
+    private Map<String, Consumer<Connection>> handshakeTriggers = Maps.newHashMap();
+
+	public void addHandshakeTrigger(Plugin plugin, Consumer<Connection> consumer) {
+		handshakeTriggers.put(plugin.getName(), consumer);
+	}
+
+	public void removeHandshakeTrigger(Plugin plugin) {
+		handshakeTriggers.remove(plugin.getName());
 	}
 
 	@Override
@@ -119,6 +130,7 @@ public class ProtocolSupportPocketStuff extends JavaPlugin implements Listener {
 			}
 
 			con.addPacketListener(new ServerSettingsRequestPacket().new decodeHandler(this, con));
+			handshakeTriggers.values().forEach(consumer -> consumer.accept(con));
 		}
 	}
 
