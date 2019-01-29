@@ -264,9 +264,9 @@ public class HologramsPacketListener extends Connection.PacketListener {
 //            System.out.println("!!! sent new meta ctx " + Long.toBinaryString(peBaseFlags));
 //            metadata.put(EntityMetadata.PeMetaBase.FLAGS, new DataWatcherObjectSVarLong(peBaseFlags));
             metadata.put(EntityMetadata.PeMetaBase.NAMETAG, new DataWatcherObjectString(nametag));
-			metadata.put(EntityMetadata.PeMetaBase.SCALE, new DataWatcherObjectFloatLe(0.001f)); // scale
-			metadata.put(EntityMetadata.PeMetaBase.BOUNDINGBOX_WIDTH, new DataWatcherObjectFloatLe(0.001f)); // bb width
-			metadata.put(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH, new DataWatcherObjectFloatLe(0.001f)); // bb height
+			metadata.put(EntityMetadata.PeMetaBase.SCALE, new DataWatcherObjectFloatLe(0.F)); // scale
+			metadata.put(EntityMetadata.PeMetaBase.BOUNDINGBOX_WIDTH, new DataWatcherObjectFloatLe(0.F)); // bb width
+			metadata.put(EntityMetadata.PeMetaBase.BOUNDINGBOX_HEIGTH, new DataWatcherObjectFloatLe(0.F)); // bb height
 
             SpawnPlayerPacket packet = new SpawnPlayerPacket(
                     new UUID(0x80, originId),

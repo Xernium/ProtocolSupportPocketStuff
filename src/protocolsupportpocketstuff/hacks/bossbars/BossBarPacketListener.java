@@ -128,9 +128,9 @@ public class BossBarPacketListener extends Connection.PacketListener {
 		public void spawn(BossBarPacketListener listener) {
 			CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(76);
 			metadata.put(4, new DataWatcherObjectString(title));
-			metadata.put(39, new DataWatcherObjectFloatLe(0.001f)); // scale
-			metadata.put(54, new DataWatcherObjectFloatLe(0.001f)); // bb width
-			metadata.put(55, new DataWatcherObjectFloatLe(0.001f)); // bb height
+			metadata.put(39, new DataWatcherObjectFloatLe(0.F)); // scale
+			metadata.put(54, new DataWatcherObjectFloatLe(0.F)); // bb width
+			metadata.put(55, new DataWatcherObjectFloatLe(0.F)); // bb height
 
 			SpawnEntityPacket packet = new SpawnEntityPacket(
 					unique,
