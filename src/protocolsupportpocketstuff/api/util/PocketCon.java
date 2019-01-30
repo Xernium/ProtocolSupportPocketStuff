@@ -263,7 +263,9 @@ public class PocketCon {
 	 * @param packet
 	 */
 	public static void sendPocketPacket(Connection connection, PEPacket packet) {
-        connection.sendRawPacket(packet.encode(connection));
+		if (connection != null && connection.getVersion().getProtocolType() == ProtocolType.PE) {
+			connection.sendRawPacket(packet.encode(connection));
+		}
     }
 
 }
