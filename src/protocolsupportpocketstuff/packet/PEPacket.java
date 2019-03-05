@@ -1,11 +1,9 @@
 package protocolsupportpocketstuff.packet;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.bukkit.plugin.PluginManager;
 import protocolsupport.api.Connection;
 import protocolsupport.api.Connection.PacketListener;
-import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.pipeline.version.v_pe.PEPacketEncoder;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.utils.netty.Allocator;
@@ -27,9 +25,6 @@ public abstract class PEPacket {
 	}
 	
 	public void decode(Connection connection, ByteBuf buf) {
-	    if (connection.getVersion().isBeforeOrEq(ProtocolVersion.MINECRAFT_PE_1_5)) {
-	        buf.readShort();
-        }
 		readFromClientData(connection, buf);
 	}
 	

@@ -128,7 +128,7 @@ public class ActionButton implements Listener {
             Location location = player.getLocation();
 
             @Cleanup
-            ClientBoundPacketData data = EntityTeleport.create(ProtocolVersion.MINECRAFT_PE_1_5, BUTTON, location.getX(), location.getY(), location.getZ(), Byte.MAX_VALUE, Byte.MAX_VALUE, Byte.MAX_VALUE, false, false);
+            ClientBoundPacketData data = EntityTeleport.create(ProtocolVersion.MINECRAFT_PE, BUTTON, 0, location.getX(), location.getY(), location.getZ(), Byte.MAX_VALUE, Byte.MAX_VALUE, Byte.MAX_VALUE);
             @Cleanup("release")
             ByteBuf buf = Allocator.allocateBuffer();
             PEPacketEncoder.sWritePacketId(ProtocolSupportAPI.getProtocolVersion(player), buf, PEPacketIDs.MOVE_ENTITY_ABSOLUTE);
