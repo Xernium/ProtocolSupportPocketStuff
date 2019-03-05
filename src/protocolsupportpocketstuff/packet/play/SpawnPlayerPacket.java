@@ -102,6 +102,10 @@ public class SpawnPlayerPacket extends PEPacket {
 		serializer.writeLongLE(0); //?
 
 		VarNumberSerializer.writeSVarInt(serializer, 0); //links, not used
+
+		if (connection.getVersion().isAfter(ProtocolVersion.MINECRAFT_PE)) {
+			StringSerializer.writeString(serializer, ProtocolVersion.MINECRAFT_PE, "");
+		}
 	}
 
 	@Override
