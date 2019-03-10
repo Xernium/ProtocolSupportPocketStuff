@@ -43,18 +43,17 @@ dlDepsDirC.mkdirs()
 File dlDepsDirS = new File('dllibss')
 dlDepsDirS.mkdirs()
 
-//TODO: Add ProtocolSupport to dlLibsC (Obviously we're in beta and cannot download yet so compilation will have to be done for now)
 def dlDepsC = [
 	new Tuple(
-		'https://mcmirror.io/files/Spigot/Spigot-1.13.2-a1f2566-20181123-1027.jar',
-		'spigot-1.13.2.jar'
+		'https://yivesmirror.com/files/spigot/spigot-1.12.2-R0.1-SNAPSHOT-b1609.jar',
+		'spigot-1.12.2-1.jar'
 	),
-//	new Tuple(
-//		'https://github.com/GlowstoneMC/Glowstone/releases/download/2018.2.0/glowstone.jar',
-//		'glowstone-1.12.2-1.jar'
-//	),
+	new Tuple(
+		'https://repo.glowstone.net/nexus/content/repositories/snapshots/net/glowstone/glowstone/2018.8.0-SNAPSHOT/glowstone-2018.8.0-20180821.174816-4.jar',
+		'glowstone-1.12.2-1.jar'
+	),
 		new Tuple(
-		'Hah. You need to compile this yourself!',
+		'https://jenkins.krusic22.com/job/ProtocolSupport-mcpenew/lastSuccessfulBuild/artifact/target/ProtocolSupport.jar',
 		'ProtocolSupport.jar'
 	)
 ]
@@ -68,12 +67,8 @@ void dlDeps(def dlDeps, File dlDepsDir) {
 		File dlDepFile = new File(dlDepsDir, it[1])
 		dlDepsNames.add(dlDepFile.getName())
 		if (!dlDepFile.exists()) {
-			if (dlDepFile.getName().equals("ProtocolSupport.jar")) {
-				throw new GradleException('You still need to compile ProtocolSupport (pocket branch) and put it in dllibsc!')
-			} else {
-				logger.lifecycle(MessageFormat.format("Downloading {0} from {1}", dlDepFile.getName(), dlDepUrl))
-				ant.get(src: dlDepUrl, dest: dlDepFile)
-			}
+			logger.lifecycle(MessageFormat.format("Downloading {0} from {1}", dlDepFile.getName(), dlDepUrl))
+			ant.get(src: dlDepUrl, dest: dlDepFile)
 		} else {
 			logger.lifecycle(MessageFormat.format("Skipping download of {0} because it already exists", dlDepFile.getName()))
 		}
