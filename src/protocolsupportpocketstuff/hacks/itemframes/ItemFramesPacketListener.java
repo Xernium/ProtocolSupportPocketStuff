@@ -444,7 +444,7 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 				switch (dw.a().a()) {
 					case 6: // Set item inside Item Frame
 						try {
-							net.minecraft.server.v1_12_R1.ItemStack item = (net.minecraft.server.v1_12_R1.ItemStack) dw.b();
+							net.minecraft.server.v1_13_R2.ItemStack item = (net.minecraft.server.v1_13_R2.ItemStack) dw.b();
 							// Yes, Reflection to initialize an ItemStackWrapper
 							// This is only required so we don't end up with moar reflection just to get all the required stuff from the item (like NBT tags)
 							ItemStackWrapper wrapper = (ItemStackWrapper) ItemFramesPacketListener.INIT_SPIGOT_ITEMSTACKWRAPPER.newInstance(item);
