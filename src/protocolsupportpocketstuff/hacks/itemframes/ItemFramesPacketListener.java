@@ -1,4 +1,4 @@
-/*package protocolsupportpocketstuff.hacks.itemframes;
+package protocolsupportpocketstuff.hacks.itemframes;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.server.v1_13_R2.DataWatcher;
@@ -9,17 +9,27 @@ import net.minecraft.server.v1_13_R2.PacketPlayOutEntityMetadata;
 import net.minecraft.server.v1_13_R2.PacketPlayOutRespawn;
 import net.minecraft.server.v1_13_R2.PacketPlayOutSpawnEntity;
 import net.minecraft.server.v1_13_R2.ItemStack;
+import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import protocolsupport.api.Connection;
+import protocolsupport.api.ProtocolSupportAPI;
+import protocolsupport.protocol.pipeline.version.v_pe.PEPacketDecoder;
 import protocolsupport.protocol.serializer.ItemStackSerializer;
 import protocolsupport.protocol.serializer.PositionSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.itemstack.ItemStackRemapper;
 import protocolsupport.protocol.typeremapper.pe.PEDataValues;
-import protocolsupport.protocol.typeremapper.pe.PEItems;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.i18n.I18NData;
 import protocolsupport.protocol.utils.types.Position;
+import protocolsupport.utils.IntTuple;
 import protocolsupport.zplatform.ServerPlatform;
+import protocolsupport.zplatform.impl.spigot.itemstack.SpigotItemStackWrapper;
+import protocolsupport.zplatform.itemstack.ItemStackWrapper;
+import protocolsupport.zplatform.itemstack.NBTTagCompoundWrapper;
 import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
 import protocolsupportpocketstuff.api.util.PocketCon;
 import protocolsupportpocketstuff.packet.play.TileDataUpdatePacket;
@@ -55,15 +65,13 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 	// Constants
 	private static final int ACTION_USE_ITEM = 2;
 	private static final int ITEM_FRAME_ENTITY_ID = 71;
-	// TODO: Check and refactor the variables name, they should be NORTH, SOUTH, EAST, WEST
-	private static final int ITEM_FRAME_BLOCK_ID_DATA0 = 1771;
-	private static final int ITEM_FRAME_BLOCK_ID_DATA1 = 1772;
-	private static final int ITEM_FRAME_BLOCK_ID_DATA2 = 1773;
-	private static final int ITEM_FRAME_BLOCK_ID_DATA3 = 1774;
 
-	public ItemFramesPacketListener(ProtocolSupportPocketStuff plugin, Connection con) {
-		this.con = con;
-	}
+    private static final int ITEM_FRAME_BLOCK_ID_DATA0 = 1771,
+            ITEM_FRAME_BLOCK_ID_DATA1 = 1772,
+            ITEM_FRAME_BLOCK_ID_DATA2 = 1773,
+            ITEM_FRAME_BLOCK_ID_DATA3 = 1774;
+
+	public static final String META_KEY = "__PSPS_ITEMFRAMESPACKETLISTENER";
 
 	static {
 		try {
@@ -93,6 +101,10 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 			DESTROY_ENTITY_ARRAY = PacketPlayOutEntityDestroy.class.getDeclaredField("a");
 			DESTROY_ENTITY_ARRAY.setAccessible(true);
 
+			// ===[ SpigotItemStackWrapper ]===
+			INIT_SPIGOT_ITEMSTACKWRAPPER = SpigotItemStackWrapper.class.getDeclaredConstructor(net.minecraft.server.v1_12_R1.ItemStack.class);
+			INIT_SPIGOT_ITEMSTACKWRAPPER.setAccessible(true);
+
 			// ===[ PacketPlayInUseEntity ]===
 			USE_ENTITY_ID = PacketPlayInUseEntity.class.getDeclaredField("a");
 			USE_ENTITY_ACTION = PacketPlayInUseEntity.class.getDeclaredField("action");
@@ -106,15 +118,43 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		}
 	}
 
+	public static class UpdateExecutor implements Listener {
+
+		private final ProtocolSupportPocketStuff plugin;
+
+		public UpdateExecutor(ProtocolSupportPocketStuff plugin) {
+			this.plugin = plugin;
+		}
+
+		@EventHandler(priority = EventPriority.LOW)
+		public void handle(PlayerJoinEvent event) {
+			Connection conn = ProtocolSupportAPI.getConnection(event.getPlayer());
+			if (conn.getMetadata("_PE_TRANSFER_") == null) {
+				return;
+			}
+			Bukkit.getScheduler().runTaskLater(plugin, () -> {
+				ItemFramesPacketListener listener = (ItemFramesPacketListener) conn.getMetadata(META_KEY);
+				if (listener == null) {
+					return;
+				}
+				listener.cachedItemFrames.values().forEach(i -> i.spawn(listener));
+			}, 100);
+		}
+	}
+
+	public ItemFramesPacketListener(ProtocolSupportPocketStuff plugin, Connection con) {
+		this.con = con;
+		con.addMetadata(META_KEY, this);
+	}
+
+	public void clean() {
+		cachedItemFrames.clear();
+	}
+
 	@Override
 	public void onPacketSending(PacketEvent event) {
 		super.onPacketSending(event);
 
-		// ===[ WORLD SWITCH ]===
-		if (event.getPacket() instanceof PacketPlayOutRespawn) {
-			cachedItemFrames.clear();
-			return;
-		}
 		// ===[ SPAWN ]===
 		if (event.getPacket() instanceof PacketPlayOutSpawnEntity) {
 			PacketPlayOutSpawnEntity packet = (PacketPlayOutSpawnEntity) event.getPacket();
@@ -189,10 +229,8 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 	public void onRawPacketReceiving(RawPacketEvent event) {
 		ByteBuf data = event.getData();
 		
-		int packetId = VarNumberSerializer.readVarInt(data);
-		data.readByte();
-		data.readByte();
-		
+		int packetId = PEPacketDecoder.sReadPacketId(con.getVersion(), data);
+
 		Position position = new Position(0, 0, 0);
 
 		if (packetId == PEPacketIDs.PLAYER_ACTION) { // Used for when the player tries to hit a item frame when it doesn't have any item inside of it
@@ -222,7 +260,7 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 
 			sendInteractEntityPacket(entry.getKey(), PacketPlayInUseEntity.EnumEntityUseAction.ATTACK);
 		}
-		if (packetId == PEPacketIDs.GOD_PACKET) {
+		if (packetId == PEPacketIDs.INVENTORY_TRANSACTION) { // GodPacket, now on ProtocolSupportPocketStuff!
 			int actionId = VarNumberSerializer.readVarInt(data);
 
 			if (actionId != ACTION_USE_ITEM)
@@ -276,10 +314,7 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 	public void onRawPacketSending(RawPacketEvent event) {
 		super.onRawPacketSending(event);
 		ByteBuf data = event.getData();
-		int packetId = VarNumberSerializer.readVarInt(data);
-
-		data.readByte();
-		data.readByte();
+		int packetId = PEPacketDecoder.sReadPacketId(con.getVersion(), data);
 
 		if (packetId == PEPacketIDs.UPDATE_BLOCK) {
 			Position position = new Position(0, 0, 0); 
@@ -409,16 +444,18 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 				switch (dw.a().a()) {
 					case 6: // Set item inside Item Frame
 						try {
-							net.minecraft.server.v1_13_R2.ItemStack item = (net.minecraft.server.v1_13_R2.ItemStack) dw.b();
+							net.minecraft.server.v1_12_R1.ItemStack item = (net.minecraft.server.v1_12_R1.ItemStack) dw.b();
+							// Yes, Reflection to initialize an ItemStackWrapper
+							// This is only required so we don't end up with moar reflection just to get all the required stuff from the item (like NBT tags)
+							ItemStackWrapper wrapper = (ItemStackWrapper) ItemFramesPacketListener.INIT_SPIGOT_ITEMSTACKWRAPPER.newInstance(item);
 
 							// Remap the item to PE
 							// First we are going to remap it using remapToClient, to fix stuff like maps, enchantments, spawn eggs, etc
-							item = ItemStackRemapper.remapToClient(listener.con.getVersion(), I18NData.DEFAULT_LOCALE, wrapper.getTypeId(), wrapper);
+							wrapper = ItemStackRemapper.remapToClient(listener.con.getVersion(), I18NData.DEFAULT_LOCALE, wrapper.getTypeId(), wrapper);
 							NBTTagCompoundWrapper itemFrameTag = ServerPlatform.get().getWrapperFactory().createEmptyNBTCompound();
 
 							// Then we are going to remap the item ID/value
 							IntTuple itemAndData = PEDataValues.ITEM_ID.getRemap(wrapper.getTypeId(), wrapper.getData());
-
 							int id = wrapper.getTypeId();
 							int data = wrapper.getData();
 
@@ -472,4 +509,3 @@ public class ItemFramesPacketListener extends Connection.PacketListener {
 		}
 	}
 }
-*/
