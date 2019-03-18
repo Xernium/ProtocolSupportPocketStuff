@@ -160,6 +160,7 @@ public class BossBarPacketListener extends Connection.PacketListener {
 			CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata = new CollectionsUtils.ArrayMap<>(EntityMetadata.PeMetaBase.NAMETAG + 1);
 			metadata.put(EntityMetadata.PeMetaBase.NAMETAG, new DataWatcherObjectString(title));
 			PocketCon.sendPocketPacket(listener.con, new EntityDataPacket(unique, metadata));
+			PocketCon.sendPocketPacket(listener.con, new BossEventPacket(unique, BossEventPacket.UPDATE));
 		}
 
 		public void updateAttributes(BossBarPacketListener listener) {
