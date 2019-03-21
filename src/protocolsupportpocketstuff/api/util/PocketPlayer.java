@@ -5,13 +5,14 @@ import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolType;
+import protocolsupport.protocol.typeremapper.pe.PEModel;
 import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
 import protocolsupportpocketstuff.api.modals.Modal;
 import protocolsupportpocketstuff.api.modals.ModalType;
 import protocolsupportpocketstuff.api.modals.callback.ModalCallback;
-import protocolsupportpocketstuff.api.skins.PocketSkinModel;
 import protocolsupportpocketstuff.packet.PEPacket;
 
 import java.util.Collection;
@@ -101,18 +102,11 @@ public class PocketPlayer {
         return PocketCon.sendModal(ProtocolSupportAPI.getConnection(player), modalId, modalType, modalJSON, modalCallback);
 	}
 
-	/***
-	 * Sends a PocketSkin to a pocket connection.
-	 * <br/><br/>
-	 * <i>When sending multiple packets to pocket it is advised
-	 * first and then use {@link PocketCon} to send the packets.</i>
-	 * @param player
-	 * @param uuid
-	 * @param skin
-	 * @param skinModel
+	/**
+	 * @see PocketCon#sendSkin(Connection, UUID, String, PEModel)
 	 */
-	public static void sendSkin(Player player, UUID uuid, byte[] skin, PocketSkinModel skinModel) {
-		PocketCon.sendSkin(ProtocolSupportAPI.getConnection(player), uuid, skin, skinModel);
+	public static void sendSkin(Player player, UUID uuid, String skinId, PEModel model) {
+		PocketCon.sendSkin(ProtocolSupportAPI.getConnection(player), uuid, skinId, model);
 	}
 
 	/***

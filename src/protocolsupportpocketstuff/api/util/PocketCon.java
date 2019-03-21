@@ -5,10 +5,10 @@ import org.bukkit.util.Vector;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolType;
+import protocolsupport.protocol.typeremapper.pe.PEModel;
 import protocolsupportpocketstuff.api.modals.Modal;
 import protocolsupportpocketstuff.api.modals.ModalType;
 import protocolsupportpocketstuff.api.modals.callback.ModalCallback;
-import protocolsupportpocketstuff.api.skins.PocketSkinModel;
 import protocolsupportpocketstuff.packet.PEPacket;
 import protocolsupportpocketstuff.packet.play.DimensionPacket;
 import protocolsupportpocketstuff.packet.play.ModalRequestPacket;
@@ -44,15 +44,7 @@ public class PocketCon {
 	 * @return all pocket connections.
 	 */
 	public static Collection<? extends Connection> getPocketConnections() {
-		return ProtocolSupportAPI.getConnections().stream().filter(pocketFilter()).collect(Collectors.toList());
-	}
-
-	/***
-	 * Filter to filter PE connections.
-	 * @return the truth is a predicate.
-	 */
-	public static Predicate<Connection> pocketFilter() {
-		return c -> isPocketConnection(c);
+		return ProtocolSupportAPI.getConnections().stream().filter(PocketCon::isPocketConnection).collect(Collectors.toList());
 	}
 
     //=====================================================\\
@@ -125,16 +117,12 @@ public class PocketCon {
 		return connection.hasMetadata(META_ON_MODAL);
 	}
 
-	/***
-	 * Sends a PocketSkin to a pocket connection.
-	 * @param connection
-	 * @param uuid
-	 * @param skin
-	 * @param skinModel
+	/**
+	 * Sends skin info to a pocket connection. May crash client if target player not exists.
+	 * @param uuid target player id
 	 */
-	public static void sendSkin(Connection connection, UUID uuid, byte[] skin, PocketSkinModel skinModel) {
-		//TODO: "Steve" is actually a hack. The name send should be the previous skin name. Not sure if this matters though. Works for now :S"
-		sendPocketPacket(connection, new SkinPacket(uuid, skinModel.getSkinId(), skinModel.getSkinName(), "Steve", skin, new byte[0], skinModel.getGeometryId(), skinModel.getGeometryData()));
+	public static void sendSkin(Connection connection, UUID uuid, String skinId, PEModel model) {
+		sendPocketPacket(connection, new SkinPacket(uuid, skinId, model.getSkinName(), "Steve", model.getSkinData(), model.getCapeData(), model.getGeometryId(), model.getGeometryData()));
 	}
 
 	/***
