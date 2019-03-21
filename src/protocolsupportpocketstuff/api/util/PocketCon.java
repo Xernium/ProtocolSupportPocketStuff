@@ -100,12 +100,9 @@ public class PocketCon {
 			addCallback(connection, id, callback);
 
 		connection.addMetadata("modalType", modalType);
+		connection.addMetadata(META_ON_MODAL, "");
 		sendPocketPacket(connection, new ModalRequestPacket(id, modalJSON));
 		return id;
-	}
-
-	public static void addModalType(Connection connection, ModalType type) {
-		connection.addMetadata("modalType", type);
 	}
 
 	public static ModalType getModalType(Connection connection) {
@@ -141,10 +138,7 @@ public class PocketCon {
 
 		PocketCon.removeCallback(connection);
 
-		connection.addMetadata(META_ON_MODAL, "");
-
 		try {
-			modalCallback.onModalResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled());
 			if (modalCallback instanceof SimpleFormCallback) {
 				SimpleFormCallback simpleFormCallback = (SimpleFormCallback) modalCallback;
 				int clickedButton = event instanceof SimpleFormResponseEvent ? ((SimpleFormResponseEvent) event).getClickedButton() : -1;

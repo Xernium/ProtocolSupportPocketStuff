@@ -7,10 +7,6 @@ import protocolsupportpocketstuff.api.modals.ModalType;
 public abstract class ComplexFormCallback extends ModalCallback {
 	public abstract void onComplexFormResponse(Player player, String modalJSON, boolean isClosedByClient, JsonArray jsonArray);
 
-	@Override
-	public void onModalResponse(Player player, String modalJSON, boolean isClosedByClient) {
-	}
-
     @Override
     public ModalType getModalType() {
         return ModalType.COMPLEX_FORM;

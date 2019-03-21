@@ -6,10 +6,6 @@ import protocolsupportpocketstuff.api.modals.ModalType;
 public abstract class ModalWindowCallback extends ModalCallback {
 	public abstract void onModalWindowResponse(Player player, String modalJSON, boolean isClosedByClient, boolean result);
 
-	@Override
-	public void onModalResponse(Player player, String modalJSON, boolean isClosedByClient) {
-	}
-
     @Override
     public ModalType getModalType() {
         return ModalType.MODAL_WINDOW;
