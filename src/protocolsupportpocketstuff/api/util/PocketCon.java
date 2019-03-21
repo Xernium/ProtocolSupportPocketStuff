@@ -1,28 +1,17 @@
 package protocolsupportpocketstuff.api.util;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.World.Environment;
 import org.bukkit.util.Vector;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolType;
-import protocolsupport.libs.com.google.gson.JsonArray;
-import protocolsupport.protocol.serializer.MiscSerializer;
-import protocolsupportpocketstuff.api.event.ComplexFormResponseEvent;
-import protocolsupportpocketstuff.api.event.ModalResponseEvent;
-import protocolsupportpocketstuff.api.event.ModalWindowResponseEvent;
-import protocolsupportpocketstuff.api.event.SimpleFormResponseEvent;
 import protocolsupportpocketstuff.api.modals.Modal;
 import protocolsupportpocketstuff.api.modals.ModalType;
-import protocolsupportpocketstuff.api.modals.callback.ComplexFormCallback;
 import protocolsupportpocketstuff.api.modals.callback.ModalCallback;
-import protocolsupportpocketstuff.api.modals.callback.ModalWindowCallback;
-import protocolsupportpocketstuff.api.modals.callback.SimpleFormCallback;
 import protocolsupportpocketstuff.api.skins.PocketSkinModel;
 import protocolsupportpocketstuff.packet.PEPacket;
 import protocolsupportpocketstuff.packet.play.DimensionPacket;
 import protocolsupportpocketstuff.packet.play.ModalRequestPacket;
-import protocolsupportpocketstuff.packet.play.ServerSettingsRequestPacket;
 import protocolsupportpocketstuff.packet.play.SkinPacket;
 import protocolsupportpocketstuff.packet.play.TransferPacket;
 import protocolsupportpocketstuff.storage.Modals;
@@ -96,8 +85,10 @@ public class PocketCon {
 	}
 
 	public static int sendModal(Connection connection, int id, ModalType modalType, String modalJSON, ModalCallback callback) {
-		if (callback != null)
+		if (callback != null) {
+			modalType.requireType(callback);
 			addCallback(connection, id, callback);
+		}
 
 		connection.addMetadata("modalType", modalType);
 		connection.addMetadata(META_ON_MODAL, "");
@@ -121,40 +112,13 @@ public class PocketCon {
 		connection.removeMetadata("modalCallback");
 	}
 
-	public static void handleModalResponse(Connection connection, ModalResponseEvent event) {
-		ModalCallback modalCallback = PocketCon.getCallback(connection);
-
-		if (modalCallback == null) {
-			if (!connection.hasMetadata(ServerSettingsRequestPacket.META_KEY)) {
-				return;
-			}
-			Pair<Integer, ModalCallback> metadata = (Pair<Integer, ModalCallback>) connection.getMetadata(ServerSettingsRequestPacket.META_KEY);
-			if (metadata.getKey().intValue() != event.getModalId()) {
-				return;
-			}
-			modalCallback = metadata.getValue();
-			connection.removeMetadata(ServerSettingsRequestPacket.META_KEY);
+	public static ModalCallback retrieveCallback(Connection connection) {
+		ModalCallback callback = getCallback(connection);
+		if (callback == null) {
+			return null;
 		}
-
-		PocketCon.removeCallback(connection);
-
-		try {
-			if (modalCallback instanceof SimpleFormCallback) {
-				SimpleFormCallback simpleFormCallback = (SimpleFormCallback) modalCallback;
-				int clickedButton = event instanceof SimpleFormResponseEvent ? ((SimpleFormResponseEvent) event).getClickedButton() : -1;
-				simpleFormCallback.onSimpleFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), clickedButton);
-			} else if (modalCallback instanceof ComplexFormCallback) {
-				ComplexFormCallback complexFormCallback = (ComplexFormCallback) modalCallback;
-				JsonArray jsonArray = event instanceof ComplexFormResponseEvent ? ((ComplexFormResponseEvent) event).getJsonArray() : null;
-				complexFormCallback.onComplexFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), jsonArray);
-			} else if (modalCallback instanceof ModalWindowCallback) {
-				ModalWindowCallback modalWindowResponseEvent = (ModalWindowCallback) modalCallback;
-				boolean result = event instanceof ModalWindowResponseEvent && ((ModalWindowResponseEvent) event).getResult();
-				modalWindowResponseEvent.onModalWindowResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), result);
-			}
-		} finally {
-			connection.removeMetadata(META_ON_MODAL);
-		}
+		removeCallback(connection);
+		return callback;
 	}
 
 	public static boolean isOnModal(Connection connection) {

@@ -1,22 +1,11 @@
 package protocolsupportpocketstuff.skin;
 
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import protocolsupport.api.Connection;
 import protocolsupport.api.events.PlayerPropertiesResolveEvent;
 import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
-import protocolsupportpocketstuff.api.event.ComplexFormResponseEvent;
-import protocolsupportpocketstuff.api.event.ModalResponseEvent;
-import protocolsupportpocketstuff.api.event.ModalWindowResponseEvent;
 import protocolsupportpocketstuff.api.event.PocketChangeSkinEvent;
-import protocolsupportpocketstuff.api.event.SimpleFormResponseEvent;
-import protocolsupportpocketstuff.api.modals.SimpleForm;
-import protocolsupportpocketstuff.api.modals.callback.SimpleFormCallback;
-import protocolsupportpocketstuff.api.modals.elements.ModalImage;
-import protocolsupportpocketstuff.api.modals.elements.ModalImage.ModalImageType;
-import protocolsupportpocketstuff.api.modals.elements.simple.ModalButton;
 import protocolsupportpocketstuff.api.util.PocketCon;
 import protocolsupportpocketstuff.api.util.SkinUtils;
 import protocolsupportpocketstuff.util.MineskinThread;
@@ -48,10 +37,4 @@ public class SkinListener implements Listener {
 		plugin.debug(e.getPlayer().getName() + " changed skin in-game: Slim Skin? " + e.isSlim() + " Width: " + e.getSkin().getWidth());
 		new MineskinThread(plugin, e.getConnection(), e.getUuid().toString(), e.getSkin(), e.isSlim()).start();
 	}
-
-    @EventHandler
-	public void onClientResponse(ModalResponseEvent e) {
-		PocketCon.handleModalResponse(e.getConnection(), e);
-	}
-
 }
