@@ -14,9 +14,11 @@ import protocolsupportpocketstuff.api.modals.Modal;
 import protocolsupportpocketstuff.api.modals.ModalType;
 import protocolsupportpocketstuff.api.modals.callback.ModalCallback;
 import protocolsupportpocketstuff.packet.PEPacket;
+import protocolsupportpocketstuff.packet.play.AvailableCommandsPacket;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -203,24 +205,28 @@ public class PocketPlayer {
 
 	// ACTION BUTTON
 
-    public void sendButton(Player player, String buttonText, int displayTick, Runnable click) {
+    public static void sendButton(Player player, String buttonText, int displayTick, Runnable click) {
         ProtocolSupportPocketStuff.getInstance().getActionButton().sendButton(player, buttonText, displayTick, click);
     }
 
-    public void sendButton(Player player, String buttonText, Runnable click) {
+    public static void sendButton(Player player, String buttonText, Runnable click) {
         ProtocolSupportPocketStuff.getInstance().getActionButton().sendButton(player, buttonText, click);
     }
 
-    public boolean hasButton(Player player) {
+    public static boolean hasButton(Player player) {
         return ProtocolSupportPocketStuff.getInstance().getActionButton().hasButton(player);
     }
 
-    public void closeButton(Player player) {
+    public static void closeButton(Player player) {
         ProtocolSupportPocketStuff.getInstance().getActionButton().closeButton(player);
     }
 
-    public void changeButtonText(Player player, String value) {
+    public static void changeButtonText(Player player, String value) {
         ProtocolSupportPocketStuff.getInstance().getActionButton().changeText(player, value);
     }
+
+    public static void sendAvailableCommands(Player player, Map<String, String> commands) {
+		sendPocketPacket(player, new AvailableCommandsPacket(commands));
+	}
 
 }
