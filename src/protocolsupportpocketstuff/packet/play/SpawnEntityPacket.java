@@ -1,20 +1,18 @@
 package protocolsupportpocketstuff.packet.play;
 
 import io.netty.buffer.ByteBuf;
-import protocolsupport.api.Connection;
-import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
-import protocolsupport.protocol.serializer.MiscSerializer;
+import protocolsupport.protocol.ConnectionImpl;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
-import protocolsupport.protocol.utils.i18n.I18NData;
 import protocolsupport.utils.CollectionsUtils;
 import protocolsupportpocketstuff.packet.PEPacket;
 
 import java.util.List;
 
 public class SpawnEntityPacket extends PEPacket {
+
 	private long entityId;
 	private int entityType;
 	private float x;
@@ -26,9 +24,13 @@ public class SpawnEntityPacket extends PEPacket {
 	private float pitch;
 	private float yaw;
 	private List<SetAttributesPacket.Attribute> attributes;
-	private CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata;
+	//private CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata;
 
-	public SpawnEntityPacket(long entityId, int entityType, float x, float y, float z, float motionX, float motionY, float motionZ, float pitch, float yaw, List<SetAttributesPacket.Attribute> attributes, CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata) {
+	public SpawnEntityPacket() { }
+
+	public SpawnEntityPacket(long entityId, int entityType, float x, float y, float z, 
+			float motionX, float motionY, float motionZ, float pitch, float yaw, 
+			List<SetAttributesPacket.Attribute> attributes, CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata) {
 		this.entityId = entityId;
 		this.entityType = entityType;
 		this.x = x;
@@ -40,7 +42,7 @@ public class SpawnEntityPacket extends PEPacket {
 		this.pitch = pitch;
 		this.yaw = yaw;
 		this.attributes = attributes;
-		this.metadata = metadata;
+		//this.metadata = metadata;
 	}
 
 	@Override
@@ -49,7 +51,7 @@ public class SpawnEntityPacket extends PEPacket {
 	}
 
 	@Override
-	public void toData(Connection connection, ByteBuf serializer) {
+	public void toData(ConnectionImpl connection, ByteBuf serializer) {
 		VarNumberSerializer.writeSVarLong(serializer, entityId); // entity ID
 		VarNumberSerializer.writeVarLong(serializer, entityId); // runtime ID
 		VarNumberSerializer.writeVarInt(serializer, entityType); // boss bar entity id
@@ -61,7 +63,6 @@ public class SpawnEntityPacket extends PEPacket {
 		serializer.writeFloatLE(motionZ); // motz
 		serializer.writeFloatLE(pitch); // pitch
 		serializer.writeFloatLE(yaw); // yaw
-
 		// We can't use SetAttributePackets#encodeAttributes because MCPE uses an different format in SpawnEntityPacket (why mojang?)
 		VarNumberSerializer.writeVarInt(serializer, attributes.size());
 		for (SetAttributesPacket.Attribute attribute : attributes) {
@@ -70,12 +71,15 @@ public class SpawnEntityPacket extends PEPacket {
 			serializer.writeFloatLE(attribute.getValue());
 			serializer.writeFloatLE(attribute.getMaximum());
 		}
-
-		EntityMetadata.encodeMeta(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
-
+		//TODO: fix
+		VarNumberSerializer.writeVarInt(serializer, 0);
+		//EntityMetadata.encodeMeta(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
 		VarNumberSerializer.writeVarInt(serializer, 0); //links, not used
 	}
 
 	@Override
-	public void readFromClientData(Connection connection, ByteBuf clientData) { }
+	public void readFromClientData(ConnectionImpl connection, ByteBuf clientdata) {
+		throw new UnsupportedOperationException();
+	}
+
 }

@@ -1,12 +1,10 @@
 package protocolsupportpocketstuff.packet.play;
 
 import io.netty.buffer.ByteBuf;
-import protocolsupport.api.Connection;
+import protocolsupport.protocol.ConnectionImpl;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.types.Position;
-import protocolsupportpocketstuff.ProtocolSupportPocketStuff;
-import protocolsupportpocketstuff.hacks.middleclick.PickRequester;
 import protocolsupportpocketstuff.packet.PEPacket;
 
 public class BlockPickRequestPacket extends PEPacket {
@@ -21,7 +19,7 @@ public class BlockPickRequestPacket extends PEPacket {
 	}
 
 	@Override
-	public void toData(Connection connection, ByteBuf serializer) {
+	public void toData(ConnectionImpl connection, ByteBuf serializer) {
 		VarNumberSerializer.writeSVarInt(serializer, position.getX());
 		VarNumberSerializer.writeSVarInt(serializer, position.getY());
 		VarNumberSerializer.writeSVarInt(serializer, position.getZ());
@@ -30,27 +28,20 @@ public class BlockPickRequestPacket extends PEPacket {
 	}
 
 	@Override
-	public void readFromClientData(Connection connection, ByteBuf clientdata) {
+	public void readFromClientData(ConnectionImpl connection, ByteBuf clientdata) {
 		position.setX(VarNumberSerializer.readSVarInt(clientdata));
 		position.setY(VarNumberSerializer.readSVarInt(clientdata));
 		position.setZ(VarNumberSerializer.readSVarInt(clientdata));
 		huh = clientdata.readBoolean();
 		slot = clientdata.readByte();
 	}
-	
-	public class decodeHandler extends PEPacket.decodeHandler {
 
-		public decodeHandler(ProtocolSupportPocketStuff plugin, Connection connection) {
-			super(plugin, connection);
-		}
+	public final Position getPosition() {
+		return position;
+	}
 
-		@Override
-		public void handle() {
-			BlockPickRequestPacket parent = BlockPickRequestPacket.this;
-			System.out.println("BlockPICK!: " + parent.position + " slot: " + parent.slot);
-			PickRequester.getInstance().handleBlockPick(connection.getPlayer(), position);
-		}
-		
+	public byte getSlot() {
+		return slot;
 	}
 
 }

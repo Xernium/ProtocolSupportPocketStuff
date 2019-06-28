@@ -1,26 +1,17 @@
 package protocolsupportpocketstuff.api.util;
 
-import org.bukkit.World.Environment;
-import org.bukkit.util.Vector;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolType;
-import protocolsupport.libs.com.google.gson.JsonArray;
-import protocolsupport.libs.com.google.gson.JsonObject;
+import protocolsupport.protocol.ConnectionImpl;
 import protocolsupport.protocol.serializer.MiscSerializer;
-import protocolsupportpocketstuff.api.event.ComplexFormResponseEvent;
-import protocolsupportpocketstuff.api.event.ModalResponseEvent;
-import protocolsupportpocketstuff.api.event.ModalWindowResponseEvent;
-import protocolsupportpocketstuff.api.event.SimpleFormResponseEvent;
+import protocolsupport.protocol.typeremapper.pe.PESkinModel;
 import protocolsupportpocketstuff.api.modals.Modal;
+import protocolsupportpocketstuff.api.modals.ModalCallback;
 import protocolsupportpocketstuff.api.modals.ModalType;
-import protocolsupportpocketstuff.api.modals.callback.ComplexFormCallback;
-import protocolsupportpocketstuff.api.modals.callback.ModalCallback;
-import protocolsupportpocketstuff.api.modals.callback.ModalWindowCallback;
-import protocolsupportpocketstuff.api.modals.callback.SimpleFormCallback;
+import protocolsupportpocketstuff.api.modals.ModalUtils;
 import protocolsupportpocketstuff.api.skins.PocketSkinModel;
 import protocolsupportpocketstuff.packet.PEPacket;
-import protocolsupportpocketstuff.packet.play.DimensionPacket;
 import protocolsupportpocketstuff.packet.play.ModalRequestPacket;
 import protocolsupportpocketstuff.packet.play.SkinPacket;
 import protocolsupportpocketstuff.packet.play.TransferPacket;
@@ -33,6 +24,9 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/***
+ * Utility to send and retrieve pocket-specific things to a {@link Connection}.
+ */
 public class PocketCon {
 	
     //=====================================================\\
@@ -70,89 +64,70 @@ public class PocketCon {
 	
 	/***
 	 * Sends a modal and gets the corresponding id.
+	 * The id can be used to track response of this modal in events.
 	 * @param modal
-	 * @return
+	 * @return the id of the modal.
 	 */
 	public static int sendModal(Connection connection, Modal modal) {
-		return sendModal(connection, Modals.INSTANCE.takeId(), modal.toJSON(), null);
+		return sendModal(connection, Modals.getInstance().takeId(), modal.toJSON(), null);
 	}
 
+	/***
+	 * Sends a modal and gets the corresponding id.
+	 * The id can be used to track response of this modal in events.
+	 * The callback is called when the player completes a modal
+	 * and all modaleventhandlers are done. 
+	 * @param connection
+	 * @param modal
+	 * @param callback
+	 * @return the id of the modal.
+	 */
 	public static int sendModal(Connection connection, Modal modal, ModalCallback callback) {
-		return sendModal(connection, Modals.INSTANCE.takeId(), modal.toJSON(), callback);
+		return sendModal(connection, Modals.getInstance().takeId(), modal.toJSON(), callback);
 	}
 
 	/***
 	 * Sends a modal with an id specified.
-	 * Nonono, don't use custom ids!
+	 * <em>Nonono, don't use custom ids!</em>
 	 * If you like you can use this function in combination with
 	 * {@link Modals.INSTANCE.takeId} to send custom JSON to the player.
 	 * @param id
-	 * @param modal
-	 * @return the modal's callback id.
+	 * @param modalJSON
+	 * @return the id of the modal.
 	 */
 	public static int sendModal(Connection connection, int id, String modalJSON) {
 		sendModal(connection, id, modalJSON, null);
 		return id;
 	}
 
+	/***
+	 * Sends a modal with an id specified.
+	 * <em>Nonono, don't use custom ids!</em>
+	 * If you like you can use this function in combination with
+	 * {@link Modals.INSTANCE.takeId} to send custom JSON to the player.
+	 * This method also registers specified callback (if not null)
+	 * which is called after modal is completed and events are handled.
+	 * @param id
+	 * @param modalJSON
+	 * @param callback
+	 * @return the id of the modal.
+	 */
 	public static int sendModal(Connection connection, int id, String modalJSON, ModalCallback callback) {
-		if (callback != null)
-			addCallback(connection, id, callback);
-
-		connection.addMetadata("modalType", detectModalType(modalJSON));
+		if (callback != null) { ModalUtils.setCallback(connection, callback); }
+		ModalUtils.setSendType(connection, ModalType.fromModal(modalJSON));
 		sendPocketPacket(connection, new ModalRequestPacket(id, modalJSON));
 		return id;
 	}
 
-	public static void addModalType(Connection connection, ModalType type) {
-		connection.addMetadata("modalType", type);
-	}
-
-	public static ModalType getModalType(Connection connection) {
-		return (ModalType) connection.getMetadata("modalType");
-	}
-
-	public static ModalType detectModalType(String modalJSON) {
-		System.out.println(modalJSON);
-		JsonObject jsonParser = StuffUtils.JSON_PARSER.parse(modalJSON).getAsJsonObject();
-		String pocketType = jsonParser.get("type").getAsString();
-		return ModalType.getByPeName(pocketType);
-	}
-
-	public static void addCallback(Connection connection, int id, ModalCallback callback) {
-		connection.addMetadata("modalCallback", callback);
-	}
-
-	public static ModalCallback getCallback(Connection connection) {
-		return (ModalCallback) connection.getMetadata("modalCallback");
-	}
-
-	public static void removeCallback(Connection connection) {
-		connection.removeMetadata("modalCallback");
-	}
-
-	public static void handleModalResponse(Connection connection, ModalResponseEvent event) {
-		ModalCallback modalCallback = PocketCon.getCallback(connection);
-
-		if (modalCallback == null)
-			return;
-
-		PocketCon.removeCallback(connection);
-
-		modalCallback.onModalResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled());
-		if (modalCallback instanceof SimpleFormCallback) {
-			SimpleFormCallback simpleFormCallback = (SimpleFormCallback) modalCallback;
-			int clickedButton = event instanceof SimpleFormResponseEvent ? ((SimpleFormResponseEvent) event).getClickedButton() : -1;
-			simpleFormCallback.onSimpleFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), clickedButton);
-		} else if (modalCallback instanceof ComplexFormCallback) {
-			ComplexFormCallback complexFormCallback = (ComplexFormCallback) modalCallback;
-			JsonArray jsonArray = event instanceof ComplexFormResponseEvent ? ((ComplexFormResponseEvent) event).getJsonArray() : null;
-			complexFormCallback.onComplexFormResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), jsonArray);
-		} else if (modalCallback instanceof ModalWindowCallback) {
-			ModalWindowCallback modalWindowResponseEvent = (ModalWindowCallback) modalCallback;
-			boolean result = event instanceof ModalWindowResponseEvent ? ((ModalWindowResponseEvent) event).getResult() : false;
-			modalWindowResponseEvent.onModalWindowResponse(connection.getPlayer(), event.getModalJSON(), event.isCancelled(), result);
-		}
+	/**
+	 * Sends a pc-like skin to a pocket connection.
+	 * @param connection
+	 * @param uuid
+	 * @param skin
+	 * @param isSlim
+	 */
+	public static void sendSkin(Connection connection, UUID uuid, byte[] skin, boolean isSlim) {
+		sendSkin(connection, uuid, skin, PocketSkinModel.fromPEModel(PESkinModel.getSkinModel(isSlim)));
 	}
 
 	/***
@@ -166,16 +141,6 @@ public class PocketCon {
 		//TODO: "Steve" is actually a hack. The name send should be the previous skin name. Not sure if this matters though. Works for now :S"
 		sendPocketPacket(connection, new SkinPacket(uuid, skinModel.getSkinId(), skinModel.getSkinName(), "Steve", skin, new byte[0], skinModel.getGeometryId(), skinModel.getGeometryData()));
 	}
-	
-	/***
-	 * Sends a dimension change to a pocket connection.
-	 * @param connection
-	 * @param environment
-	 * @param location
-	 */
-	public static void sendDimensionChange(Connection connection, Environment environment, Vector location) {
-		sendPocketPacket(connection, new DimensionPacket(environment, location));
-	}
 
 	/***
 	 * Transfers a player to another server
@@ -185,6 +150,28 @@ public class PocketCon {
 	 */
 	public static void transfer(Connection connection, String address, short port) {
 		sendPocketPacket(connection, new TransferPacket(address, port));
+	}
+
+	/***
+	 * Sends a packet to pocket.
+	 * @param connection
+	 * @param packet
+	 */
+	public static void sendPocketPacket(Connection connection, PEPacket packet) {
+		connection.sendRawPacket(MiscSerializer.readAllBytes(packet.encode((ConnectionImpl) connection)));
+	}
+
+    //=====================================================\\
+    //						Client-Info					   \\
+    //=====================================================\\
+
+	/***
+	 * Gets the client's UUID. Used for updating skin of the self player or other UUID specific things.
+	 * @param connection
+	 * @return
+	 */
+	public static UUID getClientUniqueId(Connection connection) {
+		return (UUID) getClientInformationMap(connection).get("UUID");
 	}
 
 	/***
@@ -233,25 +220,4 @@ public class PocketCon {
 		return (HashMap<String, Object>) connection.getMetadata(StuffUtils.CLIENT_INFO_KEY);
 	}
 
-	/***
-	 * Gets the client unique identifier
-	 * <br/><br/>
-	 * <b>This isn't the server unique identifier for the player</b>, this unique ID is sent by the client during login and
-	 * it is used for skin updates, player list updates and other misc stuff.
-	 * @param connection
-	 * @return the client unique identifier
-	 */
-	public static UUID getClientUniqueId(Connection connection) {
-		return (UUID) connection.getMetadata(StuffUtils.CLIENT_UUID_KEY);
-	}
-
-	/***
-	 * Sends a packet to pocket.
-	 * @param connection
-	 * @param packet
-	 */
-	public static void sendPocketPacket(Connection connection, PEPacket packet) {
-		connection.sendRawPacket(MiscSerializer.readAllBytes(packet.encode(connection)));
-	}
-	
 }

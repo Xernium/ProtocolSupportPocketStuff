@@ -1,14 +1,17 @@
 package protocolsupportpocketstuff.packet.play;
 
 import io.netty.buffer.ByteBuf;
-import protocolsupport.api.Connection;
+import protocolsupport.protocol.ConnectionImpl;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupportpocketstuff.packet.PEPacket;
 
 public class TransferPacket extends PEPacket {
+
 	private String address;
 	private short port;
+
+	public TransferPacket() { }
 
 	public TransferPacket(String address, short port) {
 		this.address = address;
@@ -21,11 +24,14 @@ public class TransferPacket extends PEPacket {
 	}
 
 	@Override
-	public void toData(Connection connection, ByteBuf serializer) {
+	public void toData(ConnectionImpl connection, ByteBuf serializer) {
 		StringSerializer.writeString(serializer, connection.getVersion(), address);
 		serializer.writeShortLE(port);
 	}
 
 	@Override
-	public void readFromClientData(Connection connection, ByteBuf clientData) { }
+	public void readFromClientData(ConnectionImpl connection, ByteBuf clientdata) {
+		throw new UnsupportedOperationException();
+	}
+
 }

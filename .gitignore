@@ -1,9 +1,12 @@
 # Build Folders #
 bin/
 build/
+libs/
 target/
 gen/
 dllibs/
+dllibss/
+dllibsc/
 
 .externalToolBuilders/
  # Eclipse Files #
@@ -23,3 +26,11 @@ dllibs/
 # IntelliJ
 .idea/
 *.iml
+*.iws
+*.ipr
+
+# jRebel
+*.rebel.xml.bak
+resources/rebel.xml
+
+out

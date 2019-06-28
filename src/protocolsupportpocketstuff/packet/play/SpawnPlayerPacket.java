@@ -1,20 +1,21 @@
 package protocolsupportpocketstuff.packet.play;
 
 import io.netty.buffer.ByteBuf;
-import protocolsupport.api.Connection;
-import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.EntityMetadata;
+import protocolsupport.protocol.ConnectionImpl;
+import protocolsupport.protocol.serializer.ItemStackSerializer;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
 import protocolsupport.protocol.utils.datawatcher.DataWatcherObject;
-import protocolsupport.protocol.utils.i18n.I18NData;
+import protocolsupport.protocol.utils.types.NetworkItemStack;
 import protocolsupport.utils.CollectionsUtils;
 import protocolsupportpocketstuff.packet.PEPacket;
 
 import java.util.UUID;
 
 public class SpawnPlayerPacket extends PEPacket {
+
 	private UUID uuid;
 	private String name;
 	private long entityId;
@@ -27,9 +28,15 @@ public class SpawnPlayerPacket extends PEPacket {
 	private float pitch;
 	private float headYaw;
 	private float yaw;
-	private CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata;
+	//private CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata;
 
-	public SpawnPlayerPacket(UUID uuid, String name, long entityId, float x, float y, float z, float motionX, float motionY, float motionZ, float pitch, float headYaw, float yaw, CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata) {
+	public SpawnPlayerPacket() { }
+
+	public SpawnPlayerPacket(UUID uuid, String name, long entityId, 
+			float x, float y, float z, 
+			float motionX, float motionY, float motionZ, 
+			float pitch, float headYaw, float yaw, 
+			CollectionsUtils.ArrayMap<DataWatcherObject<?>> metadata) {
 		this.uuid = uuid;
 		this.name = name;
 		this.entityId = entityId;
@@ -42,7 +49,7 @@ public class SpawnPlayerPacket extends PEPacket {
 		this.pitch = pitch;
 		this.headYaw = headYaw;
 		this.yaw = yaw;
-		this.metadata = metadata;
+		//this.metadata = metadata;
 	}
 
 	@Override
@@ -51,11 +58,14 @@ public class SpawnPlayerPacket extends PEPacket {
 	}
 
 	@Override
-	public void toData(Connection connection, ByteBuf serializer) {
-		MiscSerializer.writeUUID(serializer, connection.getVersion(), uuid);
+	public void toData(ConnectionImpl connection, ByteBuf serializer) {
+		MiscSerializer.writePEUUID(serializer, uuid);
 		StringSerializer.writeString(serializer, connection.getVersion(), name);
+		StringSerializer.writeString(serializer, connection.getVersion(), ""); //ThirdPartyName :F
+		VarNumberSerializer.writeVarInt(serializer, 0); //Platform
 		VarNumberSerializer.writeSVarLong(serializer, entityId); // entity ID
 		VarNumberSerializer.writeVarLong(serializer, entityId); // runtime ID
+		StringSerializer.writeString(serializer, connection.getVersion(), ""); //Chat :F
 		serializer.writeFloatLE(x); // x
 		serializer.writeFloatLE(y); // y
 		serializer.writeFloatLE(z); // z
@@ -65,23 +75,24 @@ public class SpawnPlayerPacket extends PEPacket {
 		serializer.writeFloatLE(pitch); // pitch
 		serializer.writeFloatLE(headYaw); // yaw
 		serializer.writeFloatLE(yaw); // yaw
-
-		VarNumberSerializer.writeSVarInt(serializer, 0); // held item stack
-
-		EntityMetadata.encodeMeta(serializer, connection.getVersion(), I18NData.DEFAULT_LOCALE, metadata);
-
+		//ItemStackSerializer.writeItemStack(serializer, connection.getVersion(), connection.getCache().getAttributesCache().getLocale(), NetworkItemStack.NULL, true); //held item.
+		ItemStackSerializer.writeItemStack(serializer,NetworkItemStack.NULL);
+		//TODO Fix!
+		VarNumberSerializer.writeVarInt(serializer, 0);
+		//EntityMetadata.encodeMeta(serializer, connection.getVersion(), connection.getCache().getAttributesCache().getLocale(), metadata);
 		//adventure settings
 		VarNumberSerializer.writeVarInt(serializer, 0);
 		VarNumberSerializer.writeVarInt(serializer, 0);
 		VarNumberSerializer.writeVarInt(serializer, 0);
 		VarNumberSerializer.writeVarInt(serializer, 0);
 		VarNumberSerializer.writeVarInt(serializer, 0);
-
 		serializer.writeLongLE(0); //?
-
 		VarNumberSerializer.writeSVarInt(serializer, 0); //links, not used
 	}
 
 	@Override
-	public void readFromClientData(Connection connection, ByteBuf clientData) { }
+	public void readFromClientData(ConnectionImpl connection, ByteBuf clientdata) {
+		throw new UnsupportedOperationException();
+	}
+
 }

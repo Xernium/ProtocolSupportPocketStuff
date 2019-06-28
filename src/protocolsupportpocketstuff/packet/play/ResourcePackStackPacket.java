@@ -1,19 +1,22 @@
 package protocolsupportpocketstuff.packet.play;
 
 import io.netty.buffer.ByteBuf;
-import protocolsupport.api.Connection;
+import protocolsupport.protocol.ConnectionImpl;
 import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.protocol.typeremapper.pe.PEPacketIDs;
+import protocolsupportpocketstuff.api.resourcepacks.ResourcePack;
 import protocolsupportpocketstuff.packet.PEPacket;
-import protocolsupportpocketstuff.resourcepacks.ResourcePack;
-import protocolsupportpocketstuff.util.serializer.ResourcePackSerializer;
+import protocolsupportpocketstuff.util.packet.serializer.ResourcePackSerializer;
 
 import java.util.List;
 
 public class ResourcePackStackPacket extends PEPacket {
+
 	private boolean forceResources;
 	private List<ResourcePack> behaviorPacks;
 	private List<ResourcePack> resourcePacks;
+
+	public ResourcePackStackPacket() { }
 
 	public ResourcePackStackPacket(boolean forceResources, List<ResourcePack> behaviorPacks, List<ResourcePack> resourcePacks) {
 		this.forceResources = forceResources;
@@ -27,7 +30,7 @@ public class ResourcePackStackPacket extends PEPacket {
 	}
 
 	@Override
-	public void toData(Connection connection, ByteBuf serializer) {
+	public void toData(ConnectionImpl connection, ByteBuf serializer) {
 		serializer.writeBoolean(forceResources);
 		VarNumberSerializer.writeVarInt(serializer, behaviorPacks.size()); // beh pack count
 		for (ResourcePack pack : behaviorPacks) {
@@ -40,5 +43,8 @@ public class ResourcePackStackPacket extends PEPacket {
 	}
 
 	@Override
-	public void readFromClientData(Connection connection, ByteBuf clientData) { }
+	public void readFromClientData(ConnectionImpl connection, ByteBuf clientData) {
+		throw new UnsupportedOperationException();
+	}
+
 }
